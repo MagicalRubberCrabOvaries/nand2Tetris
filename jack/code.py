@@ -67,64 +67,6 @@ class AssemblyCode(object):
             return '000'
         return self.J_BITS[mnemonic]
 
-# class MacroCode(object):
-
-#     """Rewrite M macros to have one for dest M, """
-
-#     def __init__(self):
-#         pass
-
-#     def j(self, command):
-#         """Takes J Macro and returns an A command and C command
-        
-#         >>> self.j('JMP 0')
-#         ('@0', 'D;JMP')
-#         """
-
-#         return (
-#             '@%s' % command[:command.find(' ') + 1],
-#             'D;' + command[:3]
-#         )
-
-#     def m(self, command):
-#         """Takes M Macro and returns two C commands
-        
-#         >>> self.m('M[256]=D')
-#         ('@SP', M=D)
-#         >>> self.m('A=M[SP]')
-#         ('@SP', )
-#         """
-#         return (
-#             '@%s' % command[command.find('[') + 1:command.find(']')],
-#             command[:command.find('[')] + command[:command.find(']') + 1]
-#         )
-
-#     def m2a(self, command):
-#         first = [
-#             '@%s' % command[:command.find('[') + 1][command.find('[') + 1:command.find(']')],
-#             'D=M',
-#             '@%s' % command[command.find(']') + 1:][command.find('[') + 1:command.find(']')],
-#         ]
-
-#         second = command[:command.find('[')] + command[command.find(']') + 1:]
-#         second = command[:command.find('M')] + 'D' + command[command.find(']']) + 1:]
-#         first.append(second)
-#         return first
-
-#     def m2b(self, command):
-#         first = [
-#             '@%s' % command[command.find('[') + 1:command.find(']')],
-#             'D=M'   
-#         ]
-#         second = self.m(command[:command.find('M')] + 'D' + command[:command.find(']') + 1])
-
-#         first.append(second[0], second[1])
-#         return first
-
-#     def m3(self, command):
-#         pass
-
-
 class VMCode(object):
     """Parses VM CODE """
     def __init__(self):
@@ -170,9 +112,93 @@ class VMCode(object):
         # increment stack back to bottom.
         self.asm.append('A=A+1')
 
-    def writePushPop(self, commandType arg1, arg2):
+    def writePushPop(self, commandType, arg1, arg2):
         if commandType == 'C_PUSH':
             # push <arg1> <arg2>
             if arg1 == 'constant':
                 # push constant <arg2>
                 self.asm.append('@%d' % arg2)
+                self.asm.append('D=A')
+                self.asm.append('@SP')
+                self.asm.append('A=M')
+                self.asm.append('M=D')
+                self.asm.append('A=A+1')
+
+
+
+# class MacroCode(object):
+
+#     """Rewrite M macros to have one for dest M, """
+
+#     def __init__(self):
+#         pass
+
+#     def j(self, command):
+#         """Takes J Macro and returns an A command and C command
+        
+#         >>> self.j('JMP 0')
+#         ('@0', 'D;JMP')
+#         """
+
+#         return (
+#             '@%s' % command[:command.find(' ') + 1],
+#             'D;' + command[:3]
+#         )
+
+#     def m(self, commandType, dest, comp, jump):
+#         """Accepts dest, comp, and jump from Macro Parser"""
+#         commands =[]
+#         if 'M[' in comp:
+#             commands.append('@%s' % comp[comp.find('[') + 1:comp.find(']')])
+
+#             if commandType == 'M2_MACRO':
+#                 commands.append('D=M')
+#                 comp = comp[:comp.find('M[')] + 'D' + comp[comp.find(']') + 1:]
+#                 commands.append('@%s' % comp[comp.find('[') + 1:comp.find(']')])
+#                 comp = comp[:comp.find('[')] + comp[comp.find(']') + 1:]
+#                 comma
+
+#             else:
+
+
+
+
+
+    # def m(self, command):
+    #     """Takes M Macro and returns two C commands
+        
+    #     >>> self.m('M[256]=D')
+    #     ('@SP', M=D)
+    #     >>> self.m('A=M[SP]')
+    #     ('@SP', )
+    #     """
+    #     return (
+    #         '@%s' % command[command.find('[') + 1:command.find(']')],
+    #         command[:command.find('[')] + command[:command.find(']') + 1]
+    #     )
+
+    # def m2a(self, command):
+    #     first = [
+    #         '@%s' % command[:command.find('[') + 1][command.find('[') + 1:command.find(']')],
+    #         'D=M',
+    #         '@%s' % command[command.find(']') + 1:][command.find('[') + 1:command.find(']')],
+    #     ]
+
+    #     second = command[:command.find('[')] + command[command.find(']') + 1:]
+    #     second = command[:command.find('M')] + 'D' + command[command.find(']']) + 1:]
+    #     first.append(second)
+    #     return first
+
+    # def m2b(self, command):
+    #     first = [
+    #         '@%s' % command[command.find('[') + 1:command.find(']')],
+    #         'D=M'   
+    #     ]
+    #     second = self.m(command[:command.find('M')] + 'D' + command[:command.find(']') + 1])
+
+    #     first.append(second[0], second[1])
+    #     return first
+
+    # def m3(self, command):
+    #     pass
+
