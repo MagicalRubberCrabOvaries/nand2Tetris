@@ -179,14 +179,14 @@ class AssemblyParser(BaseParser):
             if ';' in self.command else None
 
 
-class MacroParser(BaseParser):
+class MacroParser(AssemblyParser):
 
    # ---J macro ---
    # <jump> <address num/symbol>
    # A macro of an A command followed by a C command D;<jump>
    # If <jump> is JMP, then the C command is instead 0;JMP
    #
-   # ---M macro ---
+   # ---Ma macro ---
    # A?M[address]?D?=<comp>;<jump>
    # <dest>=M[address]in<comp>;<jump>
    #
@@ -206,9 +206,9 @@ class MacroParser(BaseParser):
 
     def __init__(self, code, isFile=False):
 
-        super().__init__(code, isFile)
+        super(AssemblyParser).__init__(self, code, isFile)
         # Macro of an A and C command.
-        self.M_MACRO = 'M_MACRO'
+        self.M_MACRO
         # Macro of an A and D;<jump mnem> C command.
         self.J_MACRO = 'J_MACRO'
 
@@ -216,10 +216,36 @@ class MacroParser(BaseParser):
         self.M2b_MACRO = 'M2b_MACRO' # Different Macro of 2 M macros.
         self.M3_MACRO  = 'M3_MACRO' # Macro of 3 M macros.
 
-    def commandType(self):
-        if self.command[:2] in ('JMP', 'JEQ', 'JLT', 'JGT', 'JLE', 'JGE'):
-            
+    def countM(self, command=self.command, count=0):
+        """Count the number of M macros that appear in current command."""
+        if 'M[' in command:
+            # If 'M[' is in the command string, increment by 1.
+            count += 1
+            # After that, search the next string portion again.
+            count += self.countM(
+                command=command[command.find('M[')], count=count
+            )
+        
+        return count
 
+    def commandType(self):
+        super(VMParser, self).commandType()
+        mCount = self.countM()
+        
+        if self.command[:3] in ('JMP', 'JEQ', 'JLT', 'JGT', 'JLE', 'JGE'):
+            return self.J_MACRO
+
+        elif mCount == 1:
+            return self.M_MACRO
+
+        elif mCount == 2:
+            if 'M[' self.dest():
+                return self.M2a_MACRO
+            else:
+                return self.M2b_MACRO
+        else:  # Only other possibility is 3.
+            return self.M3_MACRO
+            
 
 class VMParser(BaseParser):
 

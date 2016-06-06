@@ -59,12 +59,70 @@ class AssemblyCode(object):
         return self.D_BITS[mnemonic]
 
     def comp(self, mnemonic):
+
         return self.C_BITS[mnemonic]
 
     def jump(self, mnemonic):
         if mnemonic is None:
             return '000'
         return self.J_BITS[mnemonic]
+
+# class MacroCode(object):
+
+#     """Rewrite M macros to have one for dest M, """
+
+#     def __init__(self):
+#         pass
+
+#     def j(self, command):
+#         """Takes J Macro and returns an A command and C command
+        
+#         >>> self.j('JMP 0')
+#         ('@0', 'D;JMP')
+#         """
+
+#         return (
+#             '@%s' % command[:command.find(' ') + 1],
+#             'D;' + command[:3]
+#         )
+
+#     def m(self, command):
+#         """Takes M Macro and returns two C commands
+        
+#         >>> self.m('M[256]=D')
+#         ('@SP', M=D)
+#         >>> self.m('A=M[SP]')
+#         ('@SP', )
+#         """
+#         return (
+#             '@%s' % command[command.find('[') + 1:command.find(']')],
+#             command[:command.find('[')] + command[:command.find(']') + 1]
+#         )
+
+#     def m2a(self, command):
+#         first = [
+#             '@%s' % command[:command.find('[') + 1][command.find('[') + 1:command.find(']')],
+#             'D=M',
+#             '@%s' % command[command.find(']') + 1:][command.find('[') + 1:command.find(']')],
+#         ]
+
+#         second = command[:command.find('[')] + command[command.find(']') + 1:]
+#         second = command[:command.find('M')] + 'D' + command[command.find(']']) + 1:]
+#         first.append(second)
+#         return first
+
+#     def m2b(self, command):
+#         first = [
+#             '@%s' % command[command.find('[') + 1:command.find(']')],
+#             'D=M'   
+#         ]
+#         second = self.m(command[:command.find('M')] + 'D' + command[:command.find(']') + 1])
+
+#         first.append(second[0], second[1])
+#         return first
+
+#     def m3(self, command):
+#         pass
 
 
 class VMCode(object):
@@ -103,8 +161,11 @@ class VMCode(object):
         elif arg1 == 'eq':
             # step back again on stack.
             self.asm.append('A=A-1')
-            # add next val on
+            # and both values together.
+            self.asm.append('')
+            self.asm.append('(EQ)')
 
+            self.asm.append('(NOT EQ)')
 
         # increment stack back to bottom.
         self.asm.append('A=A+1')
@@ -115,7 +176,3 @@ class VMCode(object):
             if arg1 == 'constant':
                 # push constant <arg2>
                 self.asm.append('@%d' % arg2)
-                self.asm.append('D=A')
-                self.asm.append('@SP')
-                self.asm.append('M=D')
-                self.asm.append('A=A+1')
