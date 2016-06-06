@@ -65,3 +65,57 @@ class AssemblyCode(object):
         if mnemonic is None:
             return '000'
         return self.J_BITS[mnemonic]
+
+
+class VMCode(object):
+    """Parses VM CODE """
+    def __init__(self):
+        self.asm = []
+
+    def writeArithmetic(self, arg1):
+        
+        # assumes A is already bottom of stack.
+        # Step back on stack.
+        self.asm.append('A=A-1')
+        # Retrieve stack value and store in D.
+        self.asm.append('D=M')
+
+        if arg1 == 'neg':
+            # store negative of D back in M
+            self.asm.append('M=-D')
+
+        elif arg1 == 'add':
+            # step back again on stack.
+            self.asm.append('A=A-1')
+            # add next val on stack.
+            self.asm.append('D=D+M')
+            # store val at bottom of stack.
+            self.asm.append('M=D')
+
+        elif arg1 == 'sub':
+            # step back again on stack.
+            self.asm.append('A=A-1')
+            # sub next val on stack.
+            self.asm.append('D=D-M')
+            # store val at bottom of stack.
+            self.asm.append('M=D')
+
+        elif arg1 == 'eq':
+            # step back again on stack.
+            self.asm.append('A=A-1')
+            # add next val on
+
+
+        # increment stack back to bottom.
+        self.asm.append('A=A+1')
+
+    def writePushPop(self, commandType arg1, arg2):
+        if commandType == 'C_PUSH':
+            # push <arg1> <arg2>
+            if arg1 == 'constant':
+                # push constant <arg2>
+                self.asm.append('@%d' % arg2)
+                self.asm.append('D=A')
+                self.asm.append('@SP')
+                self.asm.append('M=D')
+                self.asm.append('A=A+1')

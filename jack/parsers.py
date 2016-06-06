@@ -8,7 +8,7 @@ class BaseParser(object):
     """Parent class for all parsers"""
 
     def __init__(self, code, isFile=False):
-
+        
         if isFile:
             self.loadFile(code)
         else:
@@ -35,10 +35,8 @@ class BaseParser(object):
         return "<{}: {}>".format(self.__class__.__name__, self.command)
 
     def __iter__(self):
-        linenum = 0
         for line in self.lines:
-            yield linenum, line
-            linenum += 1
+            yield line
 
     def __contains__(self, key):
 
@@ -69,6 +67,8 @@ class BaseParser(object):
     def loadFile(self, filepath):
         """Loads a file, strips it of whitespace,
          and stores lines as an array."""
+
+        self.filepath = os.path.abspath(filepath)
 
         with open(filepath) as srcFile:
             rawText = srcFile.readlines()
@@ -178,37 +178,112 @@ class AssemblyParser(BaseParser):
         return self.command[self.command.find(';') + 1:] \
             if ';' in self.command else None
 
-# class MacroParser(BaseParser):
 
-#    # ---J macro ---
-#    # <jump> <address num/symbol>
-#    # A macro of an A command followed by a C command D;<jump>
-#    # If <jump> is JMP, then the C command is instead 0;JMP
-#    #
-#    # ---M macro ---
-#    # A?M[address]?D?=<comp>;<jump>
-#    # <dest>=M[address]in<comp>;<jump>
-#    #
-#    # A macro of an A command and a C command that utilizes the contents of
-#    # that ram address.
-#    #
-#    # ---M2 macro---
-#    # A?M[address]D?=M[i];<jump>
-#    # <dest>=M[address]+M[address2];<jump>
-#    # Macro of 2 M macros
-#    #
-#    # ---M3 macro---
-#    # A?M[address]?D?=M[address2]+M[address3];<jump>
-#    # Macro of 3 M macros.
+class MacroParser(BaseParser):
 
-#    def __init__(self, code, isFile=False):
+   # ---J macro ---
+   # <jump> <address num/symbol>
+   # A macro of an A command followed by a C command D;<jump>
+   # If <jump> is JMP, then the C command is instead 0;JMP
+   #
+   # ---M macro ---
+   # A?M[address]?D?=<comp>;<jump>
+   # <dest>=M[address]in<comp>;<jump>
+   #
+   # A macro of an A command and a C command that utilizes the contents of
+   # that ram address.
+   #
+   # ---M2a macro---
+   # A?M[address]D?=M[i];<jump>
+   #
+   # ---M2b macro ---
+   # <dest>=M[address]+M[address2];<jump>
+   # Macro of 2 M macros
+   #
+   # ---M3 macro---
+   # A?M[address]?D?=M[address2]+M[address3];<jump>
+   # Macro of 3 M macros.
 
-#        super().__init__(code, isFile)
-#        # Macro of an A and C command.
-#        self.M_MACRO   = 'M_MACRO'
-#        # Macro of an A and D;<jump mnem> C command.
-#        self.J_MACRO   = 'J_MACRO'
+    def __init__(self, code, isFile=False):
 
-#       self.M2_MACRO  = 'M2_MACRO' # Macro of 2 M macros.
-#       self.M3_MACRO  = 'M3_MACRO' # Macro of 3 M macros.
+        super().__init__(code, isFile)
+        # Macro of an A and C command.
+        self.M_MACRO = 'M_MACRO'
+        # Macro of an A and D;<jump mnem> C command.
+        self.J_MACRO = 'J_MACRO'
 
+        self.M2a_MACRO = 'M2a_MACRO' # Macro of 2 M macros.
+        self.M2b_MACRO = 'M2b_MACRO' # Different Macro of 2 M macros.
+        self.M3_MACRO  = 'M3_MACRO' # Macro of 3 M macros.
+
+    def commandType(self):
+        if self.command[:2] in ('JMP', 'JEQ', 'JLT', 'JGT', 'JLE', 'JGE'):
+            
+
+
+class VMParser(BaseParser):
+
+    def __init__(self, code, isFile=False):
+        super(VMParser, self).__init__(self, code, isFile=isFile)
+        self.C_ARITHMETIC = 'C_ARITHMETIC'
+        self.C_PUSH = 'C_PUSH'
+        self.C_POP = 'C_POP'
+        self.C_LABEL = 'C_LABEL'
+        self.C_GOTO = 'C_GOTO'
+        self.C_IF = 'C_IF'
+        self.C_FUNCTION = 'C_FUNCTION'
+        self.C_RETURN = 'C_RETURN'
+        self.C_CALL = 'C_CALL'
+
+    def __iter__(self):
+        for i in range(len(self.lines)):
+            yield(
+                self.command,
+                self.commandType()
+                self.arg1()
+                self.arg2()
+            )
+
+    def commandType(self):
+        arg == self.arg1()
+        if arg in (
+            'add', 'sub', 'neg', 
+            'eq', 'gt', 'lt', 
+            'and', 'or', 'not'
+        ):
+            return self.C_ARITHMETIC
+        elif arg == 'pop':
+            return self.C_POP
+        elif arg == 'push':
+            return self.C_PUSH
+        elif arg == 'label':
+            return self.C_LABEL
+        elif arg == 'function':
+            return self.C_FUNCTION
+        elif arg == 'goto':
+            return self.C_GOTO
+        elif arg == 'call':
+            return self.C_CALL
+        else:
+            return self.C_RETURN
+
+    def arg1(self):
+        """Returns string portion of arg"""
+        c_type = self.commandType()
+        if c_type == self.C_ARITHMETIC:
+            return self.command
+
+        elif c_type == self.C_RETURN:
+            return None
+
+        else:
+            return self.command.split()[1]
+
+    def arg2(self):
+        """Returns int portion of arg"""
+        if self.commandType() is not in (
+            self.C_PUSH, self.C_POP, self.C_CALL, self.C_FUNCTION
+        ):
+            return int(self.command.split()[-1])
+        else:
+            None
