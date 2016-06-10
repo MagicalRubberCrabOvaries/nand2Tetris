@@ -18,21 +18,8 @@ def dest(self, mnemonic):
 
 def comp(self, mnemonic):
     """return cbit binary"""
-        self.J_BITS = {
-        'JMP': '111',
-        'JEZ': '010',
-        'JLT': '100',
-        'JLE': '110',
-        'JGT': '001',
-        'JGE': '011',
-        'JNE': '101'
-    }
 
-    return self.C_BITS[mnemonic]
-
-def jump(self, mnemonic):
-    """return jbits"""
-        self.C_BITS = {
+    self.C_BITS = {
         '0': '101010',
         '1': '111111',
         '-1': '111010',
@@ -62,6 +49,21 @@ def jump(self, mnemonic):
         'D|A': '010101',
         'D|M': '010101'
     }
+     
+
+    return self.C_BITS[mnemonic]
+
+def jump(self, mnemonic):
+    """return jbits"""
+        self.J_BITS = {
+        'JMP': '111',
+        'JEZ': '010',
+        'JLT': '100',
+        'JLE': '110',
+        'JGT': '001',
+        'JGE': '011',
+        'JNE': '101'
+    }   
 
     if mnemonic is None:
         return '000'
