@@ -68,7 +68,6 @@ class Assembler(object):
 
         # set up assembler components.
         Parser = jack.AssemblyParser(self.filepath, isFile=True)
-        CodeWriter = jack.AssemblyCode()
         SymbolTable = jack.SymbolTable()
 
         linenum = 0  # ROM line number.
@@ -160,9 +159,9 @@ class Assembler(object):
                 self.binary.append(
                     '111%s%s%s%s\n' % (
                         abit,
-                        CodeWriter.comp(comp),
-                        CodeWriter.dest(dest),
-                        CodeWriter.jump(jump)
+                        jack.comp(comp),
+                        jack.dest(dest),
+                        jack.jump(jump)
                     )
                 )
                 self.logger.warn("Writing C command: {}".format(self.binary[-1]))
