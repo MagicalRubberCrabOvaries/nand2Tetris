@@ -40,6 +40,7 @@ class VMCode(object):
                 '@SP',
                 'AM=M+1'
             )
+
         elif arg1 == 'neg':
             self.write(
                 '@SP',
@@ -48,6 +49,7 @@ class VMCode(object):
                 '@SP',
                 'AM=M+1'
             )
+
         elif arg1 == 'add':
             self.write(
                 '@SP',
@@ -56,6 +58,7 @@ class VMCode(object):
                 'A=A-1',
                 'M=D+M'
             )
+
         elif arg1 == 'sub':
             self.write(
                 '@SP',
@@ -64,6 +67,7 @@ class VMCode(object):
                 'A=A-1',
                 'M=D-M'
             )
+
         elif arg1 == 'and':
             self.write(
                 '@SP',
@@ -72,6 +76,7 @@ class VMCode(object):
                 'A=A-1',
                 'M=D&M'
             )
+
         elif arg1 = 'or':
             self.write(
                 '@SP',
@@ -80,6 +85,7 @@ class VMCode(object):
                 'A=A-1',
                 'M=D+M'
             )
+            
         elif arg1 == 'eq':
             self.write(
                 '@SP',
@@ -102,7 +108,7 @@ class VMCode(object):
             )
             self.compare_index += 1
 
-        if arg1 == 'lt':
+        elif arg1 == 'lt':
             self.write(
                 '@SP',
                 'AM=M-1',
@@ -123,7 +129,9 @@ class VMCode(object):
                 'M=D'
             )
             self.compare_index += 1
-            
+
+
+
     def writePushPop(self, commandType, arg1, arg2):
 
         if commandType == 'C_PUSH':
