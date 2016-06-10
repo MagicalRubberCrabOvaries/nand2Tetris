@@ -85,7 +85,7 @@ class VMCode(object):
                 'A=A-1',
                 'M=D+M'
             )
-            
+
         elif arg1 == 'eq':
             self.write(
                 '@SP',
@@ -130,6 +130,27 @@ class VMCode(object):
             )
             self.compare_index += 1
 
+        elif arg1 == 'gt':
+            self.write(
+                '@SP',
+                'AM=M-1',
+                'D=M',
+                'A=A-1',
+                'D=D-M',
+                '@TRUE_%d', % self.compare_index
+                'D;JGT',
+                '(FALSE_%d)', % self.compare_index
+                'D=0',
+                '@END_GT_%d', % self.compare_index
+                '0;JMP',
+                '(TRUE_%d)', % self.compare_index
+                'D=-1',
+                '(END_GT_%d)', % self.compare_index
+                '@SP',
+                'A=M-1',
+                'M=D'
+            )
+            self.compare_index += 1
 
 
     def writePushPop(self, commandType, arg1, arg2):
