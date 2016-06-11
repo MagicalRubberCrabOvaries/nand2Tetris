@@ -3,17 +3,25 @@
 # Parsers module contains parser objects for Hack Assembly,
 # Jack  Virtual Machine, and Jack Compiler.
 
+import os
 
 class BaseParser(object):
     """Parent class for all parsers"""
 
-    def __init__(self, code, isFile=False):
-        
-        if isFile:
-            self.loadFile(code)
-        else:
-            self.lines = code
+    def __init__(self, filepath):
 
+        self.filepath = os.path.abspath(filepath)
+
+        srcFile = open(filepath, 'r')
+        rawText = srcFile.readlines()
+        srcFile.close()
+
+        lines = []
+        for line in rawText:
+            if line not in ('', '\n') and not line.startswith('//'):
+                lines.append(line[:line.find('//')].strip())
+
+        self.lines = lines
         self.curr_line = 0
         self.end_line = len(self.lines) - 1
         self.command = self.lines[self.curr_line]
@@ -64,23 +72,6 @@ class BaseParser(object):
         else:
             return None
 
-    def loadFile(self, filepath):
-        """Loads a file, strips it of whitespace,
-         and stores lines as an array."""
-
-        self.filepath = os.path.abspath(filepath)
-
-        with open(filepath) as srcFile:
-            rawText = srcFile.readlines()
-            srcFile.close()
-
-        lines = []
-        for line in rawText:
-            if line not in ('', '\n') and not line.startswith('//'):
-                lines.append(line[:line.find('//')].strip())
-
-        self.lines = lines
-
     def hasMoreCommands(self):
         """Returns a boolean of whether the parser has reached the last line"""
         return not self.curr_line == self.end_line
@@ -112,9 +103,9 @@ class AssemblyParser(BaseParser):
     # Creates markers for jump points in symbol table.
     # This pseudo-command only affects the assembler and not the hardware.
 
-    def __init__(self, asm, isFile=False):
+    def __init__(self, asm):
 
-        super(AssemblyParser, self).__init__(asm, isFile=isFile)
+        super(AssemblyParser, self).__init__(asm)
         self.A_COMMAND = 'A_COMMAND'
         self.C_COMMAND = 'C_COMMAND'
         self.L_COMMAND = 'L_COMMAND'
@@ -179,8 +170,74 @@ class AssemblyParser(BaseParser):
             if ';' in self.command else None
 
 
-# class MacroParser(AssemblyParser):
+class VMParser(BaseParser):
 
+    def __init__(self, code):
+        super(VMParser, self).__init__(code)
+        self.C_ARITHMETIC = 'C_ARITHMETIC'
+        self.C_PUSH = 'C_PUSH'
+        self.C_POP = 'C_POP'
+        self.C_LABEL = 'C_LABEL'
+        self.C_GOTO = 'C_GOTO'
+        self.C_IF = 'C_IF'
+        self.C_FUNCTION = 'C_FUNCTION'
+        self.C_RETURN = 'C_RETURN'
+        self.C_CALL = 'C_CALL'
+
+    def __iter__(self):
+        for i in range(len(self.lines)):
+            yield(
+                self.command,
+                self.commandType(),
+                self.arg1(),
+                self.arg2()
+            )
+
+    def commandType(self):
+        arg = self.command[:self.command.find(' ')]
+        if arg in (
+            'add', 'sub', 'neg', 
+            'eq', 'gt', 'lt', 
+            'and', 'or', 'not'
+        ):
+            return self.C_ARITHMETIC
+        elif arg == 'pop':
+            return self.C_POP
+        elif arg == 'push':
+            return self.C_PUSH
+        elif arg == 'label':
+            return self.C_LABEL
+        elif arg == 'function':
+            return self.C_FUNCTION
+        elif arg == 'goto':
+            return self.C_GOTO
+        elif arg == 'call':
+            return self.C_CALL
+        else:
+            return self.C_RETURN
+
+    def arg1(self):
+        """Returns string portion of arg"""
+        c_type = self.commandType()
+        if c_type == self.C_ARITHMETIC:
+            return self.command
+
+        elif c_type == self.C_RETURN:
+            return None
+
+        else:
+            return self.command.split()[1]
+
+    def arg2(self):
+        """Returns int portion of arg"""
+        if self.commandType() not in (
+            self.C_PUSH, self.C_POP, self.C_CALL, self.C_FUNCTION
+        ):
+            return int(self.command.split()[-1])
+        else:
+            None
+
+# class MacroParser(AssemblyParser):
 #    # ---J macro ---
 #    # <jump> <address num/symbol>
 #    # A macro of an A command followed by a C command D;<jump>
@@ -241,70 +298,3 @@ class AssemblyParser(BaseParser):
 #         else:  # Only other possibility is 3.
 #             return self.M3_MACRO
             
-
-class VMParser(BaseParser):
-
-    def __init__(self, code, isFile=False):
-        super(VMParser, self).__init__(self, code, isFile=isFile)
-        self.C_ARITHMETIC = 'C_ARITHMETIC'
-        self.C_PUSH = 'C_PUSH'
-        self.C_POP = 'C_POP'
-        self.C_LABEL = 'C_LABEL'
-        self.C_GOTO = 'C_GOTO'
-        self.C_IF = 'C_IF'
-        self.C_FUNCTION = 'C_FUNCTION'
-        self.C_RETURN = 'C_RETURN'
-        self.C_CALL = 'C_CALL'
-
-    def __iter__(self):
-        for i in range(len(self.lines)):
-            yield(
-                self.command
-                self.commandType()
-                self.arg1()
-                self.arg2()
-            )
-
-    def commandType(self):
-        arg == self.arg1()
-        if arg in (
-            'add', 'sub', 'neg', 
-            'eq', 'gt', 'lt', 
-            'and', 'or', 'not'
-        ):
-            return self.C_ARITHMETIC
-        elif arg == 'pop':
-            return self.C_POP
-        elif arg == 'push':
-            return self.C_PUSH
-        elif arg == 'label':
-            return self.C_LABEL
-        elif arg == 'function':
-            return self.C_FUNCTION
-        elif arg == 'goto':
-            return self.C_GOTO
-        elif arg == 'call':
-            return self.C_CALL
-        else:
-            return self.C_RETURN
-
-    def arg1(self):
-        """Returns string portion of arg"""
-        c_type = self.commandType()
-        if c_type == self.C_ARITHMETIC:
-            return self.command
-
-        elif c_type == self.C_RETURN:
-            return None
-
-        else:
-            return self.command.split()[1]
-
-    def arg2(self):
-        """Returns int portion of arg"""
-        if self.commandType() is not in (
-            self.C_PUSH, self.C_POP, self.C_CALL, self.C_FUNCTION
-        ):
-            return int(self.command.split()[-1])
-        else:
-            None

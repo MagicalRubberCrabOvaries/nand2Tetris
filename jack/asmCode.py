@@ -1,8 +1,8 @@
 #! python3
 
-def dest(self, mnemonic):
+def dest(mnemonic):
     """Return dbit binary"""
-        self.D_BITS = {
+    D_BITS = {
         'A': '100',
         'D': '010',
         'M': '001',
@@ -11,15 +11,15 @@ def dest(self, mnemonic):
         'MD': '011',
         'AMD': '111'
     }
-
+    
     if mnemonic is None:
         return '000'
-    return self.D_BITS[mnemonic]
+    return D_BITS[mnemonic]
 
-def comp(self, mnemonic):
+def comp(mnemonic):
     """return cbit binary"""
 
-    self.C_BITS = {
+    C_BITS = {
         '0': '101010',
         '1': '111111',
         '-1': '111010',
@@ -51,11 +51,11 @@ def comp(self, mnemonic):
     }
      
 
-    return self.C_BITS[mnemonic]
+    return C_BITS[mnemonic]
 
-def jump(self, mnemonic):
+def jump(mnemonic):
     """return jbits"""
-        self.J_BITS = {
+    J_BITS = {
         'JMP': '111',
         'JEZ': '010',
         'JLT': '100',
@@ -67,7 +67,7 @@ def jump(self, mnemonic):
 
     if mnemonic is None:
         return '000'
-    return self.J_BITS[mnemonic]
+    return J_BITS[mnemonic]
 
 
 # class MacroCode(object):
