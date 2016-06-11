@@ -259,7 +259,7 @@ class VMParser(BaseParser):
     def __iter__(self):
         for i in range(len(self.lines)):
             yield(
-                self.command,
+                self.command
                 self.commandType()
                 self.arg1()
                 self.arg2()

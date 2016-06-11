@@ -1,30 +1,75 @@
-class VMCode(object):
-    """Parses VM CODE """
-    def __init__(self):
+#! python3
+import jack
+import os
+import sys
+import logging
+
+
+class VMTranslator(object):
+
+	def __init__(self, filepath):
+		# Init logger object first.
+
+        # Create Logger with "VMTranslator"
+        self.logger = logging.getLogger("VMTranslator")
+        self.logger.setLevel(logging.DEBUG)
+        # File handler which logs even debug messages.
+        fh = logging.FileHandler('VMTranslator.log')
+        fh.setLevel(logging.DEBUG)
+        # create console handler with a higher log level.
+        ch = logging.StreamHandler(logging.ERROR)
+        ch.setLevel(logging.ERROR)
+        # create formatter and add it to the handlers.
+        formatter = logging.Formatter(
+            '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
+        )
+        fh.setFormatter(formatter)
+        # add the handlers to the self.logger
+        self.logger.addHandler(fh)
+
+        # init basic attributes
+        self.filepath = os.path.abspath(filepath)
+        self.parsers = []
         self.length = 0
         self.compare_index = 0
-        self.filepath = None
-        self.file = None
-        
+
+        # With logger object, announce that an Assembler has been initialized.
+        self.logger.debug("Assembler initialized {}".format(self.filepath))
+
+        # walk filepath and append VMParser object to parsers for each
+        # .vm object in directory and subdirectory.
+        self.logger.info("walking {}" self.filepath)
+
+        for folderName, subfolders, filenames in os.walk(self.filepath):
+        	self.logger.info("Now in %s" % folderName)
+
+        	for subfolder in subfolders:
+        		self.logger.info(
+        			"SUBFOLDER OF %s: %s" % (folderName, subfolders)
+        		)
+
+        	for filename in filenames:
+        		self.logger.info(
+        			'FILE INSIDE %s: %s' % (folderName, filename)
+        		)
+        		
+        		if filename.endswith('.vm'):
+        			self.logger.info('%s opened for parsing.' % filename)
+        			self.parsers.append(jack.VMParser(filename, isFile=True))
+
     def __len__(self):
+        
         return self.length
 
-    def load(self, filepath):
-        """Store filepath and open file into attributes"""
-        if filepath
-        filepath = os.path.abspath(filepath)
-        self.file = open(filepath, 'w')
-
-    def close(self):
-        self.filepath = None
-        self.file.close(self)
+    def setFilename(self, filename):
+    	self.filename = filename
 
     def write(self, *commands):
         self.length += len(commands)
         if len(command) == 1:
-            self.file.write(command[0] + '\n')
+            self.asm.write(command[0] + '\n')
         else:
-            self.file.write('\n'.join(command))
+            self.asm.write('\n'.join(command))
 
     def writeArithmetic(self, arg1):
         if arg1 not in ('not', 'neg', 'and', 'or', 
@@ -152,7 +197,6 @@ class VMCode(object):
             )
             self.compare_index += 1
 
-
     def writePushPop(self, commandType, arg1, arg2):
 
         if commandType == 'C_PUSH':
@@ -168,3 +212,7 @@ class VMCode(object):
                     '@SP',
                     'AM=M+1'
                 )
+
+    def translate(self):
+    	pass
+
