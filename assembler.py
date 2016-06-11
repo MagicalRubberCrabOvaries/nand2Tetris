@@ -67,7 +67,7 @@ class Assembler(object):
         self.logger.info("Initializing parser, symbol, and code modules")
 
         # set up assembler components.
-        Parser = jack.AssemblyParser(self.filepath, isFile=True)
+        Parser = jack.AssemblyParser(self.filepath)
         SymbolTable = jack.SymbolTable()
 
         linenum = 0  # ROM line number.

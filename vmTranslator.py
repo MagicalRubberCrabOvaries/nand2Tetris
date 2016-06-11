@@ -1,4 +1,4 @@
-#! python3
+ #! python3
 import jack
 import os
 import sys
@@ -17,8 +17,8 @@ class VMTranslator(object):
         fh = logging.FileHandler('VMTranslator.log')
         fh.setLevel(logging.DEBUG)
         # create console handler with a higher log level.
-        ch = logging.StreamHandler(logging.ERROR)
-        ch.setLevel(logging.ERROR)
+        ch = logging.StreamHandler(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
         # create formatter and add it to the handlers.
         formatter = logging.Formatter(
             '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
@@ -29,7 +29,10 @@ class VMTranslator(object):
 
         # init basic attributes
         self.filepath = os.path.abspath(filepath)
-        self.filedest = filepath[:filepath.find('.')] + '.asm'
+        self.filedest = os.path.join(
+            filepath,
+            os.path.basename(filepath) + '.asm'
+        )
         self.asm = open(self.filedest, 'w')  # out file.
         self.parsers = []  # list of parsers.
         self.length = 0  # length of out file.
@@ -56,8 +59,8 @@ class VMTranslator(object):
                 )
                 
                 if filename.endswith('.vm'):
-                    self.logger.info('%s opened for parsing.' % filename)
-                    self.parsers.append(jack.VMParser(filename))
+                    self.logger.info('%s opened for parsing.' % (folderName + filename))
+                    self.parsers.append(jack.VMParser(os.path.join(folderName, filename)))
 
     def __len__(self):
         
@@ -65,10 +68,11 @@ class VMTranslator(object):
 
     def write(self, *commands):
         self.length += len(commands)
-        if len(command) == 1:
-            self.asm.write(command[0] + '\n')
+        if len(commands) == 1:
+            self.asm.write(commands[0] + '\n')
         else:
-            self.asm.write('\n'.join(command))
+            self.asm.write('\n'.join(commands))
+            self.asm.write('\n')
 
     def writeArithmetic(self, arg1):
         if arg1 not in ('not', 'neg', 'and', 'or', 
@@ -78,18 +82,18 @@ class VMTranslator(object):
 
         elif arg1 == 'not':
             self.write(
-                '@SP',
-                'AM=M-1',
-                'M=!M',
-                '@SP',
-                'AM=M+1'
+                '@SP',  # Get stack pointer
+                'AM=M-1',  # Deincrement sp and A register
+                'M=!M',  # invert the value stored at bottom of stack
+                '@SP',  # Get stack pointer
+                'AM=M+1'  # increment stack pointer and A register
             )
 
         elif arg1 == 'neg':
             self.write(
                 '@SP',
                 'AM=M-1',
-                'M=-M',
+                'M=-M',  # negative value of bottom of stack.
                 '@SP',
                 'AM=M+1'
             )
@@ -107,9 +111,9 @@ class VMTranslator(object):
             self.write(
                 '@SP',
                 'AM=M-1',
-                'D=M',
+                'D=-M',
                 'A=A-1',
-                'M=D-M'
+                'M=D+M'
             )
 
         elif arg1 == 'and':
@@ -127,7 +131,7 @@ class VMTranslator(object):
                 'AM=M-1',
                 'D=M',
                 'A=A-1',
-                'M=D+M'
+                'M=D|M'
             )
 
         elif arg1 == 'eq':
@@ -139,7 +143,7 @@ class VMTranslator(object):
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
                 'D;JEQ',
-                '(FALSE_%d)' % self.compare_index,
+                # Implied False clause
                 'D=0',
                 '@END_EQ_%d' % self.compare_index,
                 '0;JMP',
@@ -160,8 +164,8 @@ class VMTranslator(object):
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                'D;JLT',
-                '(FALSE_%d)' % self.compare_index,
+                'D;JGT',
+                # Implied False clause
                 'D=0',
                 '@END_LT_%d' % self.compare_index,
                 '0;JMP',
@@ -182,8 +186,8 @@ class VMTranslator(object):
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                'D;JGT',
-                '(FALSE_%d)' % self.compare_index,
+                'D;JLT',
+                # Implied False clause
                 'D=0',
                 '@END_GT_%d' % self.compare_index,
                 '0;JMP',
@@ -208,7 +212,7 @@ class VMTranslator(object):
                     '@%d' % arg2,
                     'D=A',
                     '@SP',
-                    'AM=M-1',
+                    'A=M',
                     'M=D',
                     '@SP',
                     'AM=M+1'
@@ -223,7 +227,7 @@ class VMTranslator(object):
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
         for parser in self.parsers:
-            self.logger.info('Parser of {}'.format(parser.filedest))
+            self.logger.info('Parser of {}'.format(parser.filepath))
 
             for command, commandType, arg1, arg2 in parser:
                 self.logger.info('Current command: %s' % command)
@@ -231,8 +235,10 @@ class VMTranslator(object):
 
                 if commandType == parser.C_ARITHMETIC:
                     self.writeArithmetic(arg1)
-                elif commandType in (parser.C_PUSH, C_POP):
+                elif commandType in (parser.C_PUSH, parser.C_POP):
                     self.writePushPop(commandType, arg1, arg2)
+
+        self.asm.close()
 
 if __name__ == '__main__':
 
@@ -253,6 +259,6 @@ if __name__ == '__main__':
         break
 
     V.translate()
-    print("Done")
+    print(".asm file generated.")
     sys.exit()
     quit()

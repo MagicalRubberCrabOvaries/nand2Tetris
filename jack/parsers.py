@@ -33,10 +33,6 @@ class BaseParser(object):
             self.curr_line,
             self.end_line
         )
-        # string = ''
-        # for line in self.lines:
-        #     string += line + '\n'
-        # return string
 
     def __repr__(self):
  
@@ -78,8 +74,9 @@ class BaseParser(object):
 
     def advance(self):
         """Points to the current index of the commands."""
-        self.curr_line += 1
-        self.command = self.lines[self.curr_line]
+        if self.hasMoreCommands():
+            self.curr_line += 1
+            self.command = self.lines[self.curr_line]
 
     def reset(self):
         """Sets pointer back to top of command array"""
@@ -103,9 +100,9 @@ class AssemblyParser(BaseParser):
     # Creates markers for jump points in symbol table.
     # This pseudo-command only affects the assembler and not the hardware.
 
-    def __init__(self, asm):
+    def __init__(self, filepath):
 
-        super(AssemblyParser, self).__init__(asm)
+        super(AssemblyParser, self).__init__(filepath)
         self.A_COMMAND = 'A_COMMAND'
         self.C_COMMAND = 'C_COMMAND'
         self.L_COMMAND = 'L_COMMAND'
@@ -124,10 +121,8 @@ class AssemblyParser(BaseParser):
                 self.jump()
             )
 
-            if self.hasMoreCommands():
-                self.advance()
+            self.advance()
         self.reset()
-
 
     def commandType(self):
         """ Returns the type of Assembly command the current line is"""
@@ -172,8 +167,8 @@ class AssemblyParser(BaseParser):
 
 class VMParser(BaseParser):
 
-    def __init__(self, code):
-        super(VMParser, self).__init__(code)
+    def __init__(self, filepath):
+        super(VMParser, self).__init__(filepath)
         self.C_ARITHMETIC = 'C_ARITHMETIC'
         self.C_PUSH = 'C_PUSH'
         self.C_POP = 'C_POP'
@@ -185,23 +180,32 @@ class VMParser(BaseParser):
         self.C_CALL = 'C_CALL'
 
     def __iter__(self):
-        for i in range(len(self.lines)):
+        self.reset()
+        for i in range(len(self)):
             yield(
                 self.command,
                 self.commandType(),
                 self.arg1(),
                 self.arg2()
             )
+            
+            self.advance()
+
+        self.reset()
 
     def commandType(self):
-        arg = self.command[:self.command.find(' ')]
-        if arg in (
+        
+        for i in (
             'add', 'sub', 'neg', 
             'eq', 'gt', 'lt', 
             'and', 'or', 'not'
         ):
-            return self.C_ARITHMETIC
-        elif arg == 'pop':
+            if i in self.command:
+                return self.C_ARITHMETIC
+
+        arg = self.command[:self.command.find(' ')]
+
+        if arg == 'pop':
             return self.C_POP
         elif arg == 'push':
             return self.C_PUSH
@@ -213,7 +217,7 @@ class VMParser(BaseParser):
             return self.C_GOTO
         elif arg == 'call':
             return self.C_CALL
-        else:
+        elif arg == 'return':
             return self.C_RETURN
 
     def arg1(self):
@@ -221,16 +225,12 @@ class VMParser(BaseParser):
         c_type = self.commandType()
         if c_type == self.C_ARITHMETIC:
             return self.command
-
-        elif c_type == self.C_RETURN:
-            return None
-
         else:
             return self.command.split()[1]
 
     def arg2(self):
         """Returns int portion of arg"""
-        if self.commandType() not in (
+        if self.commandType() in (
             self.C_PUSH, self.C_POP, self.C_CALL, self.C_FUNCTION
         ):
             return int(self.command.split()[-1])

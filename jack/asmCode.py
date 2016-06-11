@@ -57,7 +57,7 @@ def jump(mnemonic):
     """return jbits"""
     J_BITS = {
         'JMP': '111',
-        'JEZ': '010',
+        'JEQ': '010',
         'JLT': '100',
         'JLE': '110',
         'JGT': '001',
