@@ -139,7 +139,6 @@ class VMTranslator(object):
                 'M=D|M'
             )
 
-<<<<<<< HEAD
         else:  # Comparison operators.
             jump = ''
             if arg1 == 'eq':
