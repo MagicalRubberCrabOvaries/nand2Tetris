@@ -38,6 +38,19 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
+        self.segments = {
+            'local': 'LCL',
+            'argument': 'ARG',
+            'this': 'THIS',
+            'that': 'THAT'
+        }
+
+        self.compare = {
+            'eq': 'D;JEQ',
+            'lt': 'D;JGT',
+            'gt': 'D;JLT'
+        }
+
         # With logger object, announce that an Assembler has been initialized.
         self.logger.debug("Assembler initialized {}".format(self.filepath))
 
@@ -126,6 +139,7 @@ class VMTranslator(object):
                 'M=D|M'
             )
 
+<<<<<<< HEAD
         else:  # Comparison operators.
             jump = ''
             if arg1 == 'eq':
@@ -154,7 +168,32 @@ class VMTranslator(object):
             )
             self.compare_index += 1
 
+=======
+        elif arg1 in ('eq', 'lt', 'gt'):
+            self.write(
+                '@SP',
+                'AM=M-1',
+                'D=M',
+                'A=A-1',
+                'D=D-M',
+                '@TRUE_%d' % self.compare_index,
+                '%s', % self.compare[arg1]
+                # Implied False clause
+                'D=0',
+                '@END_CMP_%d' % self.compare_index,
+                '0;JMP',
+                '(TRUE_%d)' % self.compare_index,
+                'D=-1',
+                '(END_EQ_%d)' % self.compare_index,
+                '@SP',
+                'A=M-1',
+                'M=D'
+            )
+            self.compare_index += 1
+
+>>>>>>> new-head
     def writePushPop(self, commandType, arg1, arg2):
+
         if commandType not in ('C_PUSH', 'C_POP'):
             return None
 
@@ -173,9 +212,15 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'temp':
+<<<<<<< HEAD
                 temp = 5 + arg2
                 self.write(
                     '@R%d' % temp,
+=======
+                # push temp <index> onto
+                self.write(
+                    '@R%d' % (5 + arg2),
+>>>>>>> new-head
                     'D=M',
                     '@SP',
                     'A=M',
@@ -188,6 +233,7 @@ class VMTranslator(object):
                 pass
 
             elif arg1 in ('local', 'argument', 'this', 'that'):
+<<<<<<< HEAD
                 
                 base = ''
                 if arg1 == 'local':
@@ -204,6 +250,14 @@ class VMTranslator(object):
                     'D=A',
                     '%s' % base,
                     'D=D+M',
+=======
+                self.write(
+                    '@%d' % arg2,
+                    'D=A',
+                    '@%s' % self.segment[arg1],
+                    'A=D+M',  # Go to the base + index address.
+                    'D=M',
+>>>>>>> new-head
                     '@SP',
                     'A=M',
                     'M=D',
@@ -211,6 +265,7 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
+<<<<<<< HEAD
         else:
             if arg1 == 'temp':
                 temp = 5 + arg2
@@ -259,6 +314,8 @@ class VMTranslator(object):
             'M=D'
         )
 
+=======
+>>>>>>> new-head
     def close(self):
       
         self.file.close()
