@@ -45,6 +45,12 @@ class VMTranslator(object):
             'that': 'THAT'
         }
 
+        self.compare = {
+            'eq': 'D;JEQ',
+            'lt': 'D;JGT',
+            'gt': 'D;JLT'
+        }
+
         # With logger object, announce that an Assembler has been initialized.
         self.logger.debug("Assembler initialized {}".format(self.filepath))
 
@@ -141,7 +147,7 @@ class VMTranslator(object):
                 'M=D|M'
             )
 
-        elif arg1 == 'eq':
+        elif arg1 in ('eq', 'lt', 'gt'):
             self.write(
                 '@SP',
                 'AM=M-1',
@@ -149,58 +155,14 @@ class VMTranslator(object):
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                'D;JEQ',
+                '%s', % self.compare[arg1]
                 # Implied False clause
                 'D=0',
-                '@END_EQ_%d' % self.compare_index,
+                '@END_CMP_%d' % self.compare_index,
                 '0;JMP',
                 '(TRUE_%d)' % self.compare_index,
                 'D=-1',
                 '(END_EQ_%d)' % self.compare_index,
-                '@SP',
-                'A=M-1',
-                'M=D'
-            )
-            self.compare_index += 1
-
-        elif arg1 == 'lt':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',
-                'A=A-1',
-                'D=D-M',
-                '@TRUE_%d' % self.compare_index,
-                'D;JGT',
-                # Implied False clause
-                'D=0',
-                '@END_LT_%d' % self.compare_index,
-                '0;JMP',
-                '(TRUE_%d)' % self.compare_index,
-                'D=-1',
-                '(END_LT_%d)' % self.compare_index,
-                '@SP',
-                'A=M-1',
-                'M=D'
-            )
-            self.compare_index += 1
-
-        elif arg1 == 'gt':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',
-                'A=A-1',
-                'D=D-M',
-                '@TRUE_%d' % self.compare_index,
-                'D;JLT',
-                # Implied False clause
-                'D=0',
-                '@END_GT_%d' % self.compare_index,
-                '0;JMP',
-                '(TRUE_%d)' % self.compare_index,
-                'D=-1',
-                '(END_GT_%d)' % self.compare_index,
                 '@SP',
                 'A=M-1',
                 'M=D'
@@ -254,7 +216,6 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M+1'
                 )
-
 
     def close(self):
       
