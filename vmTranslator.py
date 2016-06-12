@@ -153,7 +153,7 @@ class VMTranslator(object):
                 '@SP',
                 'A=M-1',
                 'M=D'
-            )
+            )git
             self.compare_index += 1
 
         elif arg1 == 'lt':
@@ -218,11 +218,20 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
+    def writeSetup(self):
+        self.write(
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        )
+
     def close(self):
       
         self.file.close()
 
     def translate(self):
+
         
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
