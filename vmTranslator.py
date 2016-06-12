@@ -75,33 +75,31 @@ class VMTranslator(object):
             self.asm.write('\n')
 
     def writeArithmetic(self, arg1):
+        """Handles all arithmetic logic"""
+
         if arg1 not in ('not', 'neg', 'and', 'or', 
             'add', 'sub', 'eq', 'gt', 'lt'):
 
             return None
 
-        elif arg1 == 'not':
+        self.write(
+            '@SP',  # Get stack pointer
+            'AM=M-1'  # Deincrement sp and A register
+        )
+
+        # Unary commands
+
+        if arg1 in ('not', 'neg'):
             self.write(
-                '@SP',  # Get stack pointer
-                'AM=M-1',  # Deincrement sp and A register
-                'M=!M',  # invert the value stored at bottom of stack
+                '%s' % ('M=!M' if arg1 == 'not' else 'neg'), 
                 '@SP',  # Get stack pointer
                 'AM=M+1'  # increment stack pointer and A register
             )
 
-        elif arg1 == 'neg':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'M=-M',  # negative value of bottom of stack.
-                '@SP',
-                'AM=M+1'
-            )
+        # Binary commands
 
         elif arg1 == 'add':
             self.write(
-                '@SP',
-                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'M=D+M'
@@ -109,8 +107,6 @@ class VMTranslator(object):
 
         elif arg1 == 'sub':
             self.write(
-                '@SP',
-                'AM=M-1',
                 'D=-M',
                 'A=A-1',
                 'M=D+M'
@@ -118,8 +114,6 @@ class VMTranslator(object):
 
         elif arg1 == 'and':
             self.write(
-                '@SP',
-                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'M=D&M'
@@ -127,73 +121,33 @@ class VMTranslator(object):
 
         elif arg1 == 'or':
             self.write(
-                '@SP',
-                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'M=D|M'
             )
 
-        elif arg1 == 'eq':
+        else:  # Comparison operators.
+            jump = ''
+            if arg1 == 'eq':
+                jump = 'D;JEQ'
+            elif arg1 == 'lt':
+                jump = 'D;JGT'
+            else:
+                jump = 'D;JLT'
+
             self.write(
-                '@SP',
-                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                'D;JEQ',
+                '%s' % jump,
                 # Implied False clause
                 'D=0',
-                '@END_EQ_%d' % self.compare_index,
+                '@END_CMP_%d' % self.compare_index,
                 '0;JMP',
                 '(TRUE_%d)' % self.compare_index,
                 'D=-1',
                 '(END_EQ_%d)' % self.compare_index,
-                '@SP',
-                'A=M-1',
-                'M=D'
-            )git
-            self.compare_index += 1
-
-        elif arg1 == 'lt':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',
-                'A=A-1',
-                'D=D-M',
-                '@TRUE_%d' % self.compare_index,
-                'D;JGT',
-                # Implied False clause
-                'D=0',
-                '@END_LT_%d' % self.compare_index,
-                '0;JMP',
-                '(TRUE_%d)' % self.compare_index,
-                'D=-1',
-                '(END_LT_%d)' % self.compare_index,
-                '@SP',
-                'A=M-1',
-                'M=D'
-            )
-            self.compare_index += 1
-
-        elif arg1 == 'gt':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',
-                'A=A-1',
-                'D=D-M',
-                '@TRUE_%d' % self.compare_index,
-                'D;JLT',
-                # Implied False clause
-                'D=0',
-                '@END_GT_%d' % self.compare_index,
-                '0;JMP',
-                '(TRUE_%d)' % self.compare_index,
-                'D=-1',
-                '(END_GT_%d)' % self.compare_index,
                 '@SP',
                 'A=M-1',
                 'M=D'
@@ -218,6 +172,85 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
+            elif arg1 == 'temp':
+                temp = 5 + arg2
+                self.write(
+                    '@R%d' % temp,
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
+            elif arg1 == 'static':
+                pass
+
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+                
+                base = ''
+                if arg1 == 'local':
+                    base = '@LCL'
+                elif arg1 == 'argument':
+                    base = '@ARG'
+                elif arg1 == 'this':
+                    base = '@THIS'
+                else:
+                    base = '@THAT'
+
+                self.write(
+                    '@%d' % arg2,
+                    'D=A',
+                    '%s' % base,
+                    'D=D+M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
+        else:
+            if arg1 == 'temp':
+                temp = 5 + arg2
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@R%d' % temp,
+                    'M=D'
+                )
+            
+            elif arg1 == 'static':
+                pass
+
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+                base = ''
+                if arg1 == 'local':
+                    base = '@LCL'
+                elif arg1 == 'argument':
+                    base = '@ARG'
+                elif arg1 == 'this':
+                    base = '@THIS'
+                else:
+                    base = '@THAT'
+
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@R13',
+                    'M=D',
+                    '@%d' % arg2,
+                    'D=A',
+                    '%s' % base,
+                    'D=D+M',
+                    '@R13',
+                    'A=M',
+                    'M=D'
+                )
+
     def writeSetup(self):
         self.write(
             '@256',
@@ -231,7 +264,7 @@ class VMTranslator(object):
         self.file.close()
 
     def translate(self):
-
+        self.writeSetup()
         
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
@@ -247,7 +280,7 @@ class VMTranslator(object):
                 elif commandType in (parser.C_PUSH, parser.C_POP):
                     self.writePushPop(commandType, arg1, arg2)
 
-        self.asm.close()
+        self.close()
 
 if __name__ == '__main__':
 
