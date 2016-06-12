@@ -93,22 +93,14 @@ class VMTranslator(object):
 
             return None
 
-        elif arg1 == 'not':
+        elif arg1 in ('not', 'neg'):
             self.write(
                 '@SP',  # Get stack pointer
                 'AM=M-1',  # Deincrement sp and A register
-                'M=!M',  # invert the value stored at bottom of stack
+                # Invert if 'not' else opposite.
+                '%s' % 'M=!M' if arg1 == 'not' else 'M=-M',
                 '@SP',  # Get stack pointer
                 'AM=M+1'  # increment stack pointer and A register
-            )
-
-        elif arg1 == 'neg':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'M=-M',  # negative value of bottom of stack.
-                '@SP',
-                'AM=M+1'
             )
 
         elif arg1 == 'add':
@@ -155,14 +147,14 @@ class VMTranslator(object):
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                '%s', % self.compare[arg1]
+                '%s' % self.compare[arg1],
                 # Implied False clause
                 'D=0',
                 '@END_CMP_%d' % self.compare_index,
                 '0;JMP',
                 '(TRUE_%d)' % self.compare_index,
                 'D=-1',
-                '(END_EQ_%d)' % self.compare_index,
+                '(END_CMP_%d)' % self.compare_index,
                 '@SP',
                 'A=M-1',
                 'M=D'
