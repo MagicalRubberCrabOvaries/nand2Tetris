@@ -38,7 +38,7 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
-        self.segments = {
+        self.segment = {
             'local': 'LCL',
             'argument': 'ARG',
             'this': 'THIS',
@@ -80,6 +80,15 @@ class VMTranslator(object):
         return self.length
 
     def write(self, *commands):
+        """Helper method. Writes a series of strings to output
+        self.write(
+            '@SP',
+            'A=M'
+        )
+
+        will write '@SP\nA=M\n' to the output file.
+        """
+        
         self.length += len(commands)
         if len(commands) == 1:
             self.asm.write(commands[0] + '\n')
