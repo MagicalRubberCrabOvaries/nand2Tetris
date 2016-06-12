@@ -38,6 +38,13 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
+        self.segments = {
+            'local': 'LCL',
+            'argument': 'ARG',
+            'this': 'THIS',
+            'that': 'THAT'
+        }
+
         # With logger object, announce that an Assembler has been initialized.
         self.logger.debug("Assembler initialized {}".format(self.filepath))
 
@@ -201,6 +208,7 @@ class VMTranslator(object):
             self.compare_index += 1
 
     def writePushPop(self, commandType, arg1, arg2):
+
         if commandType not in ('C_PUSH', 'C_POP'):
             return None
 
@@ -217,6 +225,36 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M+1'
                 )
+
+            elif arg1 == 'temp':
+                # push temp <index> onto
+                self.write(
+                    '@R%d' % (5 + arg2),
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
+            elif arg1 == 'static':
+                pass
+
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+                self.write(
+                    '@%d' % arg2,
+                    'D=A',
+                    '@%s' % self.segment[arg1],
+                    'A=D+M',  # Go to the base + index address.
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
 
     def close(self):
       
