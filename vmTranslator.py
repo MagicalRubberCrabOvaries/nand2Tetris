@@ -88,7 +88,7 @@ class VMTranslator(object):
 
         will write '@SP\nA=M\n' to the output file.
         """
-        
+
         self.length += len(commands)
         if len(commands) == 1:
             self.asm.write(commands[0] + '\n')
@@ -217,6 +217,19 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M+1'
                 )
+
+        else:  # C_POP
+            if arg1 == 'temp':
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@R%d' % (5 + arg2),
+                    'M=D'
+                )
+
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+
 
     def close(self):
       
