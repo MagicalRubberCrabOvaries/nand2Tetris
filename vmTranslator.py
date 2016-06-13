@@ -38,7 +38,7 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
-        self.segments = {
+        self.segment = {
             'local': 'LCL',
             'argument': 'ARG',
             'this': 'THIS',
@@ -80,6 +80,15 @@ class VMTranslator(object):
         return self.length
 
     def write(self, *commands):
+        """Helper method. Writes a series of strings to output
+        self.write(
+            '@SP',
+            'A=M'
+        )
+
+        will write '@SP\nA=M\n' to the output file.
+        """
+
         self.length += len(commands)
         if len(commands) == 1:
             self.asm.write(commands[0] + '\n')
@@ -95,21 +104,16 @@ class VMTranslator(object):
 
             return None
 
-        self.write(
-            '@SP',  # Get stack pointer
-            'AM=M-1'  # Deincrement sp and A register
-        )
-
         # Unary commands
-
-        if arg1 in ('not', 'neg'):
+        elif arg1 in ('not', 'neg'):
             self.write(
-                '%s' % ('M=!M' if arg1 == 'not' else 'neg'), 
+                '@SP',  # Get stack pointer
+                'AM=M-1',  # Deincrement sp and A register
+                # Invert if 'not' else opposite.
+                '%s' % 'M=!M' if arg1 == 'not' else 'M=-M',
                 '@SP',  # Get stack pointer
                 'AM=M+1'  # increment stack pointer and A register
             )
-
-        # Binary commands
 
         elif arg1 == 'add':
             self.write(
@@ -167,7 +171,6 @@ class VMTranslator(object):
             )
             self.compare_index += 1
 
-=======
         elif arg1 in ('eq', 'lt', 'gt'):
             self.write(
                 '@SP',
@@ -176,21 +179,20 @@ class VMTranslator(object):
                 'A=A-1',
                 'D=D-M',
                 '@TRUE_%d' % self.compare_index,
-                '%s', % self.compare[arg1]
+                '%s' % self.compare[arg1],
                 # Implied False clause
                 'D=0',
                 '@END_CMP_%d' % self.compare_index,
                 '0;JMP',
                 '(TRUE_%d)' % self.compare_index,
                 'D=-1',
-                '(END_EQ_%d)' % self.compare_index,
+                '(END_CMP_%d)' % self.compare_index,
                 '@SP',
                 'A=M-1',
                 'M=D'
             )
             self.compare_index += 1
 
->>>>>>> new-head
     def writePushPop(self, commandType, arg1, arg2):
 
         if commandType not in ('C_PUSH', 'C_POP'):
@@ -211,15 +213,13 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'temp':
-<<<<<<< HEAD
                 temp = 5 + arg2
                 self.write(
                     '@R%d' % temp,
-=======
                 # push temp <index> onto
                 self.write(
                     '@R%d' % (5 + arg2),
->>>>>>> new-head
+
                     'D=M',
                     '@SP',
                     'A=M',
@@ -229,7 +229,15 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'static':
-                pass
+                self.write(
+                    '@%d' % (16 + arg2),
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
 
             elif arg1 in ('local', 'argument', 'this', 'that'):
 <<<<<<< HEAD
@@ -265,13 +273,30 @@ class VMTranslator(object):
                 )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         else:
             if arg1 == 'temp':
                 temp = 5 + arg2
+=======
+            elif arg1 == 'pointer':
+                self.write(
+                    '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
+        else:  # C_POP
+            if arg1 == 'temp':
+>>>>>>> new-head
                 self.write(
                     '@SP',
                     'AM=M-1',
                     'D=M',
+<<<<<<< HEAD
                     '@R%d' % temp,
                     'M=D'
                 )
@@ -290,21 +315,47 @@ class VMTranslator(object):
                 else:
                     base = '@THAT'
 
+=======
+                    '@R%d' % (5 + arg2),
+                    'M=D'
+                )
+
+            elif arg1 == 'static':
+>>>>>>> new-head
                 self.write(
                     '@SP',
                     'AM=M-1',
                     'D=M',
+<<<<<<< HEAD
                     '@R13',
                     'M=D',
                     '@%d' % arg2,
                     'D=A',
                     '%s' % base,
                     'D=D+M',
+=======
+                    '@%d' % (16 + arg2),
+                    'M=D'
+                )
+
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+                self.write(
+                    '@%s' % self.segment[arg1],
+                    'D=M',
+                    '@%d' % arg2,
+                    'D=D+A',
+                    '@R13',
+                    'M=D',
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+>>>>>>> new-head
                     '@R13',
                     'A=M',
                     'M=D'
                 )
 
+<<<<<<< HEAD
     def writeSetup(self):
         self.write(
             '@256',
@@ -314,6 +365,17 @@ class VMTranslator(object):
         )
 
 =======
+>>>>>>> new-head
+=======
+            elif arg1 == 'pointer':
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
+                    'M=D'
+                )            
+
 >>>>>>> new-head
     def close(self):
       
