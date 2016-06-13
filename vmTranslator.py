@@ -218,6 +218,17 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
+            elif arg1 == 'pointer':
+                self.write(
+                    '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
+                    'D=M',
+                    '@SP'
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
+
         else:  # C_POP
             if arg1 == 'temp':
                 self.write(
@@ -246,6 +257,15 @@ class VMTranslator(object):
                     'A=M',
                     'M=D'
                 )
+
+            elif arg1 == 'pointer':
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
+                    'M=D'
+                )            
 
     def close(self):
       
