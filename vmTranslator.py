@@ -222,7 +222,7 @@ class VMTranslator(object):
                 self.write(
                     '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
                     'D=M',
-                    '@SP'
+                    '@SP',
                     'A=M',
                     'M=D',
                     '@SP',
