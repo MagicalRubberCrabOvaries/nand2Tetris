@@ -234,7 +234,7 @@ class VMTranslator(object):
             elif arg1 in ('local', 'argument', 'this', 'that'):
                 self.write(
                     '@%s' % self.segment[arg1],
-                    'D=A',
+                    'D=M',
                     '@%d' % arg2,
                     'D=D+A',
                     '@R13',
