@@ -202,7 +202,15 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'static':
-                pass
+                self.write(
+                    '@%d' % (16 + arg2),
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M+1'
+                )
 
             elif arg1 in ('local', 'argument', 'this', 'that'):
                 self.write(
@@ -240,7 +248,13 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'static':
-                pass
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@%d' % (16 + arg2),
+                    'M=D'
+                )
 
             elif arg1 in ('local', 'argument', 'this', 'that'):
                 self.write(
