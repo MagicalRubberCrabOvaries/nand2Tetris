@@ -228,8 +228,24 @@ class VMTranslator(object):
                     'M=D'
                 )
 
-            elif arg1 in ('local', 'argument', 'this', 'that'):
+            elif arg1 == 'static':
+                pass
 
+            elif arg1 in ('local', 'argument', 'this', 'that'):
+                self.write(
+                    '@%s' % self.segment[arg1],
+                    'D=A',
+                    '@%d' % arg2,
+                    'D=D+A',
+                    '@R13',
+                    'M=D',
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@R13',
+                    'A=M',
+                    'M=D'
+                )
 
     def close(self):
       
