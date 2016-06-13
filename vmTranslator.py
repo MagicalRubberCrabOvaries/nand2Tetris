@@ -38,6 +38,7 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
+        # translate arguments into asm symbols.
         self.segment = {
             'local': 'LCL',
             'argument': 'ARG',
@@ -45,6 +46,7 @@ class VMTranslator(object):
             'that': 'THAT'
         }
 
+        # retrieve correct jump for argument.
         self.compare = {
             'eq': 'D;JEQ',
             'lt': 'D;JGT',
@@ -70,7 +72,7 @@ class VMTranslator(object):
                 self.logger.info(
                     'FILE INSIDE %s: %s' % (folderName, filename)
                 )
-                
+                # only open files with .vm extension.
                 if filename.endswith('.vm'):
                     self.logger.info('%s opened for parsing.' % (folderName + filename))
                     self.parsers.append(jack.VMParser(os.path.join(folderName, filename)))
@@ -116,16 +118,16 @@ class VMTranslator(object):
             self.write(
                 '@SP',
                 'AM=M-1',
-                'D=M',
+                'D=M',  # retrieve top of stack.
                 'A=A-1',
-                'M=D+M'
+                'M=D+M'  # retrieve next stack entry, add, and restore.
             )
 
         elif arg1 == 'sub':
             self.write(
                 '@SP',
                 'AM=M-1',
-                'D=-M',
+                'D=-M', 
                 'A=A-1',
                 'M=D+M'
             )
