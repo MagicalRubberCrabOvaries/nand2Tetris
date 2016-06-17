@@ -304,12 +304,10 @@ class VMTranslator(object):
     def writeFunction(self, functionName, numLocals):
         pass
 
-    def close(self):
-      
-        self.file.close()
-
     def translate(self):
         
+        self.writeInit()  # bootstrap
+
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
         for parser in self.parsers:
@@ -323,6 +321,18 @@ class VMTranslator(object):
                     self.writeArithmetic(arg1)
                 elif commandType in (parser.C_PUSH, parser.C_POP):
                     self.writePushPop(commandType, arg1, arg2)
+                elif commandType in parser.C_LABEL:
+                    pass
+                elif commandType in parser.C_GOTO:
+                    pass
+                elif commandType in parser.C_IF:
+                    pass
+                elif commandType in parser.C_CALL:
+                    pass
+                elif commandType in parser.C_RETURN:
+                    pass
+                elif commandType in parser.C_FUNCTION:
+                    pass
 
         self.asm.close()
 
