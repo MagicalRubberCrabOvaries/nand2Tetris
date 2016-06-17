@@ -283,6 +283,27 @@ class VMTranslator(object):
                     'M=D'
                 )            
 
+    def writeInit(self):
+        pass
+
+    def writeLabel(self, label):
+        pass
+
+    def writeGoto(self, label):
+        pass
+
+    def writeIf(self, label):
+        pass
+
+    def writeCall(self, functionName, numArgs):
+        pass
+
+    def writeReturn(self):
+        pass
+
+    def writeFunction(self, functionName, numLocals):
+        pass
+
     def close(self):
       
         self.file.close()
