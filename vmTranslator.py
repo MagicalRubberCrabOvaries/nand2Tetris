@@ -258,7 +258,7 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M-1',
                     'D=M',
-                    '@%d' % (16 + arg2),
+                    '@%s' % (parser.name + '.' + str(arg2)),
                     'M=D'
                 )
 
