@@ -33,6 +33,7 @@ class VMTranslator(object):
             filepath,
             os.path.basename(filepath) + '.asm'
         )
+
         self.asm = open(self.filedest, 'w')  # out file.
         self.parsers = []  # list of parsers.
         self.length = 0  # length of out file.
@@ -97,6 +98,8 @@ class VMTranslator(object):
         else:
             self.asm.write('\n'.join(commands))
             self.asm.write('\n')
+
+    # Translate vmcode to asm.
 
     def writeArithmetic(self, arg1):
         """Translate arithmetic commands into hack assembly"""
@@ -206,7 +209,7 @@ class VMTranslator(object):
 
             elif arg1 == 'static':
                 self.write(
-                    '@%d' % (16 + arg2),
+                    '@%s' % (parser.name + '.' + str(arg2)),
                     'D=M',
                     '@SP',
                     'A=M',
@@ -284,6 +287,8 @@ class VMTranslator(object):
                     'M=D'
                 )            
 
+    # Generate pushpop commands and then call the above functions.
+
     def writeInit(self):
         """Write bootstrap code"""
         pass
@@ -306,6 +311,8 @@ class VMTranslator(object):
     def writeFunction(self, functionName, numLocals):
         pass
 
+    # Run vmcode lines through the above functions and output asm file.
+
     def translate(self):
         
         self.writeInit()  # bootstrap
@@ -315,20 +322,26 @@ class VMTranslator(object):
         for parser in self.parsers:
             self.logger.info('Parser of {}'.format(parser.filepath))
 
+            # iter over individual parser outputs.
             for command, commandType, arg1, arg2 in parser:
                 self.logger.info('Current command: %s' % command)
                 self.logger.debug('%s %s %s' % (commandType, arg1, arg2))
 
+                # Basic vmtranslation.
                 if commandType == parser.C_ARITHMETIC:
                     self.writeArithmetic(arg1)
                 elif commandType in (parser.C_PUSH, parser.C_POP):
                     self.writePushPop(commandType, arg1, arg2)
+
+                # program flow
                 elif commandType in parser.C_LABEL:
                     pass
                 elif commandType in parser.C_GOTO:
                     pass
                 elif commandType in parser.C_IF:
                     pass
+
+                # function calling.
                 elif commandType in parser.C_CALL:
                     pass
                 elif commandType in parser.C_RETURN:
