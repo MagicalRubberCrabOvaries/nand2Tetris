@@ -33,7 +33,7 @@ class VMTranslator(object):
             filepath,
             os.path.basename(filepath) + '.asm'
         )
-
+        self.filename = ''
         self.asm = open(self.filedest, 'w')  # out file.
         self.parsers = []  # list of parsers.
         self.length = 0  # length of out file.
@@ -81,6 +81,10 @@ class VMTranslator(object):
     def __len__(self):
         """Return length of output file"""
         return self.length
+
+    def setFilename(self, filename):
+        """Update filename attribute"""
+        self.filename = filename
 
     def write(self, *commands):
         """Helper method. Writes a series of strings to output
@@ -209,7 +213,7 @@ class VMTranslator(object):
 
             elif arg1 == 'static':
                 self.write(
-                    '@%s' % (parser.name + '.' + str(arg2)),
+                    '@%s' % (self.filename + '.' + str(arg2)),
                     'D=M',
                     '@SP',
                     'A=M',
@@ -258,7 +262,7 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M-1',
                     'D=M',
-                    '@%s' % (parser.name + '.' + str(arg2)),
+                    '@%s' % (self.filename + '.' + str(arg2)),
                     'M=D'
                 )
 
@@ -322,6 +326,7 @@ class VMTranslator(object):
         for parser in self.parsers:
             self.logger.info('Parser of {}'.format(parser.filepath))
 
+            self.setFilename(parser.name)
             # iter over individual parser outputs.
             for command, commandType, arg1, arg2 in parser:
                 self.logger.info('Current command: %s' % command)
