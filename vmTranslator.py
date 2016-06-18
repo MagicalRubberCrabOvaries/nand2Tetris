@@ -78,7 +78,7 @@ class VMTranslator(object):
                     self.parsers.append(jack.VMParser(os.path.join(folderName, filename)))
 
     def __len__(self):
-        
+        """Return length of output file"""
         return self.length
 
     def write(self, *commands):
@@ -99,6 +99,7 @@ class VMTranslator(object):
             self.asm.write('\n')
 
     def writeArithmetic(self, arg1):
+        """Translate arithmetic commands into hack assembly"""
         if arg1 not in ('not', 'neg', 'and', 'or', 
             'add', 'sub', 'eq', 'gt', 'lt'):
 
@@ -173,7 +174,7 @@ class VMTranslator(object):
             self.compare_index += 1
 
     def writePushPop(self, commandType, arg1, arg2):
-
+        """Translates stack commands push and pop into hack asm"""
         if commandType not in ('C_PUSH', 'C_POP'):
             return None
 
@@ -284,6 +285,7 @@ class VMTranslator(object):
                 )            
 
     def writeInit(self):
+        """Write bootstrap code"""
         pass
 
     def writeLabel(self, label):
