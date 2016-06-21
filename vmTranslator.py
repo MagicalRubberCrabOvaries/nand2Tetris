@@ -263,6 +263,17 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
+            elif arg1 in ('LCL, ARG, THIS, THAT'):
+                self.write(
+                    '@%s' % arg1,
+                    'D=M',
+                    '@SP',
+                    'A=M',
+                    'M=D',
+                    '@SP',
+                    'AM=M-1'
+                )
+
         else:  # C_POP
             if arg1 == 'temp':
                 self.write(
@@ -360,13 +371,134 @@ class VMTranslator(object):
     #############
 
     def writeCall(self, functionName, numArgs):
-        pass
+        """Call function
 
-    def writeReturn(self):
-        pass
+        --- Pseudo-Code ---
+        push return-address
+        push LCL
+        push ARG
+        push THIS
+        push THAT
+        ARG = SP-n-5
+        LCL = SP
+        goto (functionName)
+        (return-address)
+
+        Finally, after this call, append functionName to self.functions
+        to identify functions.
+        """
+
+        self.write(
+            '@%s$%s' % (self.functions[-1], 'return-address'),
+            'D=A',
+            '@SP',
+            'A=M',
+            'M=D',
+            '@SP',
+            'AM=M+1'
+        )
+        self.writePushPop('C_PUSH', 'LCL', None)
+        self.writePushPop('C_PUSH', 'ARG', None)
+        self.writePushPop('C_PUSH', 'THIS', None)
+        self.writePushPop('C_PUSH', 'THAT', None)
+        self.write(
+            # ARG = SP-n-5
+            '@5',
+            'D=A',
+            '@%d' % numArgs,
+            'D=D+A',
+            '@SP',
+            'D=M-D',
+            '@ARG',
+            'M=D',
+            # LCL = SP
+            '@SP',
+            'D=M',
+            '@LCL',
+            'M=D'
+        )
+        self.writeGoto(functionName)
+        self.writeLabel('return-address')
+
+        self.functions.append(functionName)
 
     def writeFunction(self, functionName, numLocals):
-        pass
+        self.write(
+            '(%s)' % functionName,
+        )
+        for i in range(numLocals):
+            self.writePushPop('C_PUSH', 'constant', 0)
+
+    def writeReturn(self):
+        # Return value will be at top of stack.
+        # Pop into argument 0.
+        # SP will be repositioned to ARG + 1
+        # LCL, ARG, THIS, and THAT will then be
+        # restored to previous values.
+        self.write(
+            # Store return value (top of stack)
+            # in current arg 0
+            '@SP',
+            'A=M',
+            'D=M', # Retrieve return val.
+            '@ARG', 
+            'A=M', # Point A register at arg 0.
+            'M=D' # store return value in arg 0.
+
+            # Reposition SP to ARG+1.
+            # Already pointing at arg 0
+            'D=A+1',
+            '@SP',
+            'M=D',
+
+            # Store LCL in temporary variable.
+            '@LCL',
+            'D=M',
+            '@R14', # FRAME
+            'M=D',
+
+            # Restore THAT
+            # A already pointing @R5
+            'AM=M-1',  # Decrement FRAME 
+            'D=M',  # Retrieve value.
+            '@THAT', # Point at THAT register.
+            'M=D', # restore THAT
+
+            # Restore THIS
+            '@R14', 
+            'AM=M-1',  # Decrement FRAME 
+            'D=M',  # Retrieve value.
+            '@THIS', # Point at THIS register.
+            'M=D', # restore THIS
+            
+            # Restore ARG
+            '@R14',
+            'AM=M-1',  # Decrement FRAME 
+            'D=M',  # Retrieve value.
+            '@ARG', # Point at ARG register.
+            'M=D', # restore ARG
+
+            # Restore LCL
+            '@R14',
+            'AM=M-1',  # Decrement FRAME 
+            'D=M',  # Retrieve value.
+            '@LCL', # Point at LCL register.
+            'M=D', # restore LCL
+
+            # Go to return address
+            '@R14',
+            'AM=M-1',  # Decrement FRAME 
+            '0;JMP' # goto return address.
+
+            # Here, commented out asm code for
+            # storing return address in temp var
+            # it seemed unnecessary, so it is left
+            # commented for testing purposes.
+
+            #'D=M',  # Retrieve value.
+            #'@R6', # point at R6
+            #'M=D',            
+        )
 
     #################
     # Main function #
@@ -374,7 +506,7 @@ class VMTranslator(object):
 
     def translate(self):
         
-        self.writeInit()  # bootstrap
+        # self.writeInit()  # bootstrap
 
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")

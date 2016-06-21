@@ -219,7 +219,7 @@ class VMParser(BaseParser):
             return self.C_IF
         elif arg == 'call':
             return self.C_CALL
-        elif arg == 'return':
+        else: # arg == 'return':
             return self.C_RETURN
 
     def arg1(self):
@@ -227,6 +227,8 @@ class VMParser(BaseParser):
         c_type = self.commandType()
         if c_type == self.C_ARITHMETIC:
             return self.command
+        elif c_type == self.C_RETURN:
+            return None
         else:
             return self.command.split()[1]
 
