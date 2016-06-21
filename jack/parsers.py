@@ -11,7 +11,7 @@ class BaseParser(object):
     def __init__(self, filepath):
 
         self.filepath = os.path.abspath(filepath)
-
+        self.name = os.path.basename(filepath[:filepath.find('.')])
         srcFile = open(filepath, 'r')
         rawText = srcFile.readlines()
         srcFile.close()
