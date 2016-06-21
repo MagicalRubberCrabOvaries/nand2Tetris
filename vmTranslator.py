@@ -7,6 +7,10 @@ import logging
 
 class VMTranslator(object):
 
+    ##################
+    # Dunder Methods #
+    ##################
+
     def __init__(self, filepath):
         # Init logger object first.
 
@@ -33,11 +37,15 @@ class VMTranslator(object):
             filepath,
             os.path.basename(filepath) + '.asm'
         )
+        self.filename = ''
         self.asm = open(self.filedest, 'w')  # out file.
         self.parsers = []  # list of parsers.
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
+        self.functions = ['null']
+
+        # translate arguments into asm symbols.
         self.segment = {
             'local': 'LCL',
             'argument': 'ARG',
@@ -45,6 +53,7 @@ class VMTranslator(object):
             'that': 'THAT'
         }
 
+        # retrieve correct jump for argument.
         self.compare = {
             'eq': 'D;JEQ',
             'lt': 'D;JGT',
@@ -70,14 +79,26 @@ class VMTranslator(object):
                 self.logger.info(
                     'FILE INSIDE %s: %s' % (folderName, filename)
                 )
-                
+                # only open files with .vm extension.
                 if filename.endswith('.vm'):
                     self.logger.info('%s opened for parsing.' % (folderName + filename))
                     self.parsers.append(jack.VMParser(os.path.join(folderName, filename)))
 
     def __len__(self):
-        
+        """Return length of output file"""
         return self.length
+
+    ##################
+    # Helper Methods #
+    ##################
+
+    def setFilename(self, filename):
+        """Update filename attribute"""
+        self.filename = filename
+
+    def close(self):
+        """Close output file"""
+        self.asm.close()
 
     def write(self, *commands):
         """Helper method. Writes a series of strings to output
@@ -96,15 +117,17 @@ class VMTranslator(object):
             self.asm.write('\n'.join(commands))
             self.asm.write('\n')
 
-    def writeArithmetic(self, arg1):
-        """Handles all arithmetic logic"""
+    ####################
+    # Stack Operations #
+    ####################
 
+    def writeArithmetic(self, arg1):
+        """Translate arithmetic commands into hack assembly"""
         if arg1 not in ('not', 'neg', 'and', 'or', 
             'add', 'sub', 'eq', 'gt', 'lt'):
 
             return None
 
-        # Unary commands
         elif arg1 in ('not', 'neg'):
             self.write(
                 '@SP',  # Get stack pointer
@@ -117,20 +140,26 @@ class VMTranslator(object):
 
         elif arg1 == 'add':
             self.write(
-                'D=M',
+                '@SP',
+                'AM=M-1',
+                'D=M',  # retrieve top of stack.
                 'A=A-1',
-                'M=D+M'
+                'M=D+M'  # retrieve next stack entry, add, and restore.
             )
 
         elif arg1 == 'sub':
             self.write(
-                'D=-M',
+                '@SP',
+                'AM=M-1',
+                'D=-M', 
                 'A=A-1',
                 'M=D+M'
             )
 
         elif arg1 == 'and':
             self.write(
+                '@SP',
+                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'M=D&M'
@@ -138,38 +167,12 @@ class VMTranslator(object):
 
         elif arg1 == 'or':
             self.write(
+                '@SP',
+                'AM=M-1',
                 'D=M',
                 'A=A-1',
                 'M=D|M'
             )
-
-        else:  # Comparison operators.
-            jump = ''
-            if arg1 == 'eq':
-                jump = 'D;JEQ'
-            elif arg1 == 'lt':
-                jump = 'D;JGT'
-            else:
-                jump = 'D;JLT'
-
-            self.write(
-                'D=M',
-                'A=A-1',
-                'D=D-M',
-                '@TRUE_%d' % self.compare_index,
-                '%s' % jump,
-                # Implied False clause
-                'D=0',
-                '@END_CMP_%d' % self.compare_index,
-                '0;JMP',
-                '(TRUE_%d)' % self.compare_index,
-                'D=-1',
-                '(END_EQ_%d)' % self.compare_index,
-                '@SP',
-                'A=M-1',
-                'M=D'
-            )
-            self.compare_index += 1
 
         elif arg1 in ('eq', 'lt', 'gt'):
             self.write(
@@ -194,7 +197,7 @@ class VMTranslator(object):
             self.compare_index += 1
 
     def writePushPop(self, commandType, arg1, arg2):
-
+        """Translates stack commands push and pop into hack asm"""
         if commandType not in ('C_PUSH', 'C_POP'):
             return None
 
@@ -213,13 +216,9 @@ class VMTranslator(object):
                 )
 
             elif arg1 == 'temp':
-                temp = 5 + arg2
-                self.write(
-                    '@R%d' % temp,
                 # push temp <index> onto
                 self.write(
                     '@R%d' % (5 + arg2),
-
                     'D=M',
                     '@SP',
                     'A=M',
@@ -230,7 +229,7 @@ class VMTranslator(object):
 
             elif arg1 == 'static':
                 self.write(
-                    '@%d' % (16 + arg2),
+                    '@%s' % (self.filename + '.' + str(arg2)),
                     'D=M',
                     '@SP',
                     'A=M',
@@ -240,31 +239,12 @@ class VMTranslator(object):
                 )
 
             elif arg1 in ('local', 'argument', 'this', 'that'):
-<<<<<<< HEAD
-                
-                base = ''
-                if arg1 == 'local':
-                    base = '@LCL'
-                elif arg1 == 'argument':
-                    base = '@ARG'
-                elif arg1 == 'this':
-                    base = '@THIS'
-                else:
-                    base = '@THAT'
-
-                self.write(
-                    '@%d' % arg2,
-                    'D=A',
-                    '%s' % base,
-                    'D=D+M',
-=======
                 self.write(
                     '@%d' % arg2,
                     'D=A',
                     '@%s' % self.segment[arg1],
                     'A=D+M',  # Go to the base + index address.
                     'D=M',
->>>>>>> new-head
                     '@SP',
                     'A=M',
                     'M=D',
@@ -272,12 +252,6 @@ class VMTranslator(object):
                     'AM=M+1'
                 )
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        else:
-            if arg1 == 'temp':
-                temp = 5 + arg2
-=======
             elif arg1 == 'pointer':
                 self.write(
                     '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
@@ -291,50 +265,20 @@ class VMTranslator(object):
 
         else:  # C_POP
             if arg1 == 'temp':
->>>>>>> new-head
                 self.write(
                     '@SP',
                     'AM=M-1',
                     'D=M',
-<<<<<<< HEAD
-                    '@R%d' % temp,
-                    'M=D'
-                )
-            
-            elif arg1 == 'static':
-                pass
-
-            elif arg1 in ('local', 'argument', 'this', 'that'):
-                base = ''
-                if arg1 == 'local':
-                    base = '@LCL'
-                elif arg1 == 'argument':
-                    base = '@ARG'
-                elif arg1 == 'this':
-                    base = '@THIS'
-                else:
-                    base = '@THAT'
-
-=======
                     '@R%d' % (5 + arg2),
                     'M=D'
                 )
 
             elif arg1 == 'static':
->>>>>>> new-head
                 self.write(
                     '@SP',
                     'AM=M-1',
                     'D=M',
-<<<<<<< HEAD
-                    '@R13',
-                    'M=D',
-                    '@%d' % arg2,
-                    'D=A',
-                    '%s' % base,
-                    'D=D+M',
-=======
-                    '@%d' % (16 + arg2),
+                    '@%s' % (self.filename + '.' + str(arg2)),
                     'M=D'
                 )
 
@@ -349,24 +293,11 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M-1',
                     'D=M',
->>>>>>> new-head
                     '@R13',
                     'A=M',
                     'M=D'
                 )
 
-<<<<<<< HEAD
-    def writeSetup(self):
-        self.write(
-            '@256',
-            'D=A',
-            '@SP',
-            'M=D'
-        )
-
-=======
->>>>>>> new-head
-=======
             elif arg1 == 'pointer':
                 self.write(
                     '@SP',
@@ -376,41 +307,130 @@ class VMTranslator(object):
                     'M=D'
                 )            
 
->>>>>>> new-head
-    def close(self):
-      
-        self.file.close()
+    #############
+    # Bootstrap #
+    #############
+
+    def writeInit(self):
+        """Write bootstrap code"""
+        self.write(
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        )
+        self.writeCall('Sys.init', 0)
+
+    ################
+    # Program Flow #
+    ################
+
+    def writeLabel(self, label):
+        """Writes a label, meant for locals within functions.
+        
+        Inside function 'mult':
+        >>> self.writeLabel('test_label')
+        '(mult$test_label)'
+
+        Globally:
+        >>> self.writeLabel('foo')
+        '(null$foo)'
+        """
+        self.write(
+            '(%s$%s)' % (self.functions[-1], label)
+        )
+
+    def writeGoto(self, label):
+        self.write(
+            '@%s$%s' % (self.functions[-1], label),
+            '0;JMP'
+        )
+
+    def writeIf(self, label):
+        self.write(
+            '@SP',
+            'AM=M-1',
+            'D=M',
+            '@%s$%s' % (self.functions[-1], label),
+            'D;JNE'
+        )
+
+    #############
+    # Functions #
+    #############
+
+    def writeCall(self, functionName, numArgs):
+        pass
+
+    def writeReturn(self):
+        pass
+
+    def writeFunction(self, functionName, numLocals):
+        pass
+
+    #################
+    # Main function #
+    #################
 
     def translate(self):
-        self.writeSetup()
         
+        self.writeInit()  # bootstrap
+
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
         for parser in self.parsers:
             self.logger.info('Parser of {}'.format(parser.filepath))
 
+            self.setFilename(parser.name)
+            # iter over individual parser outputs.
             for command, commandType, arg1, arg2 in parser:
                 self.logger.info('Current command: %s' % command)
                 self.logger.debug('%s %s %s' % (commandType, arg1, arg2))
 
+                # Basic vmtranslation.
                 if commandType == parser.C_ARITHMETIC:
                     self.writeArithmetic(arg1)
                 elif commandType in (parser.C_PUSH, parser.C_POP):
                     self.writePushPop(commandType, arg1, arg2)
 
+                # program flow
+                elif commandType == parser.C_LABEL:
+                    self.writeLabel(arg1)
+                elif commandType == parser.C_GOTO:
+                    self.writeGoto(arg1)
+                elif commandType == parser.C_IF:
+                    self.writeIf(arg1)
+
+                # function calling.
+                elif commandType == parser.C_CALL:
+                    self.writeCall(arg1, arg2)
+                elif commandType == parser.C_RETURN:
+                    self.writeReturn()
+                elif commandType == parser.C_FUNCTION:
+                    self.writeFunction(arg1, arg2)
+
         self.close()
 
 if __name__ == '__main__':
 
-    while True:
+    def exit():
+        sys.exit()
+        quit()
 
+    while True:
+        # Try to input filepath, keep trying until correct input
+        # or 'quit' keyword.
         try:
             print("Enter filepath. Relative paths to the cwd are acceptable.")
+            print("Enter 'quit' or 'q' to exit.")
             filepath = input()
-            if not os.path.exists(filepath):
+            if filepath.startswith('q'):
+                exit()
+            elif not os.path.exists(filepath):
                 raise IOError
 
-            V = VMTranslator(filepath)
+            else:
+                V = VMTranslator(filepath)
 
         except IOError:
             print("IOError. Enter real filepath")
@@ -420,5 +440,4 @@ if __name__ == '__main__':
 
     V.translate()
     print(".asm file generated.")
-    sys.exit()
-    quit()
+    exit()
