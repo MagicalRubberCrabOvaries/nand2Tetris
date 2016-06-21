@@ -367,7 +367,7 @@ class VMTranslator(object):
             '0;JMP'
         )
 
-    def writeIf(self, label):
+    def writeIf(self, label):''
         if self.functions[-1] == None:
             label = '(%s)' % label
         else:
