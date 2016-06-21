@@ -348,12 +348,12 @@ class VMTranslator(object):
         '(foo)'
         """
         if self.functions[-1] == None:
-            label = '(%s)' % label
+            label = '%s' % label
         else:
-            label = '(%s$%s)' % (self.functions[-1], label)
+            label = '%s$%s' % (self.functions[-1], label)
         
         self.write(
-            '(%s)' % (label)
+            '(%s)' % label
         )
 
     def writeGoto(self, label):
@@ -402,8 +402,14 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
+        label = 'return-address'
+        if self.functions[-1] == None:
+            label = '%s' % label
+        else:
+            label = '%s$%s' % (self.functions[-1], label)
+
         self.write(
-            '@%s$return-address' % (functionName),
+            '@%s' % label,
             'D=A',
             '@SP',
             'A=M',
