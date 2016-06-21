@@ -443,7 +443,7 @@ class VMTranslator(object):
             'D=M', # Retrieve return val.
             '@ARG', 
             'A=M', # Point A register at arg 0.
-            'M=D' # store return value in arg 0.
+            'M=D', # store return value in arg 0.
 
             # Reposition SP to ARG+1.
             # Already pointing at arg 0
