@@ -215,6 +215,8 @@ class VMParser(BaseParser):
             return self.C_FUNCTION
         elif arg == 'goto':
             return self.C_GOTO
+        elif arg == 'if-goto':
+            return self.C_IF
         elif arg == 'call':
             return self.C_CALL
         elif arg == 'return':
