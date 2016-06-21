@@ -43,7 +43,7 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
-        self.functions = ['null']
+        self.functions = [None]
 
         # translate arguments into asm symbols.
         self.segment = {
@@ -345,24 +345,39 @@ class VMTranslator(object):
 
         Globally:
         >>> self.writeLabel('foo')
-        '(null$foo)'
+        '(foo)'
         """
+        if self.functions[-1] == None:
+            label = '(%s)' % label
+        else:
+            label = '(%s$%s)' % (self.functions[-1], label)
+        
         self.write(
-            '(%s$%s)' % (self.functions[-1], label)
+            '(%s)' % (label)
         )
 
     def writeGoto(self, label):
+        if self.functions[-1] == None:
+            label = '(%s)' % label
+        else:
+            label = '(%s$%s)' % (self.functions[-1], label)
+        
         self.write(
-            '@%s$%s' % (self.functions[-1], label),
+            '@%s' % label,
             '0;JMP'
         )
 
     def writeIf(self, label):
+        if self.functions[-1] == None:
+            label = '(%s)' % label
+        else:
+            label = '(%s$%s)' % (self.functions[-1], label)
+
         self.write(
             '@SP',
             'AM=M-1',
             'D=M',
-            '@%s$%s' % (self.functions[-1], label),
+            '@%s' % label,
             'D;JNE'
         )
 
@@ -388,8 +403,10 @@ class VMTranslator(object):
         to identify functions.
         """
 
+        self.functions.append(functionName)
+
         self.write(
-            '@%s$%s' % (self.functions[-1], 'return-address'),
+            '@%s$return-address' % (functionName),
             'D=A',
             '@SP',
             'A=M',
@@ -419,8 +436,6 @@ class VMTranslator(object):
         )
         self.writeGoto(functionName)
         self.writeLabel('return-address')
-
-        self.functions.append(functionName)
 
     def writeFunction(self, functionName, numLocals):
         self.write(
@@ -499,6 +514,7 @@ class VMTranslator(object):
             #'@R6', # point at R6
             #'M=D',            
         )
+        del self.functions[-1]
 
     #################
     # Main function #
@@ -506,7 +522,7 @@ class VMTranslator(object):
 
     def translate(self):
         
-        # self.writeInit()  # bootstrap
+        self.writeInit()  # bootstrap
 
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
