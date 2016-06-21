@@ -358,20 +358,20 @@ class VMTranslator(object):
 
     def writeGoto(self, label):
         if self.functions[-1] == None:
-            label = '(%s)' % label
+            label = '%s' % label
         else:
-            label = '(%s$%s)' % (self.functions[-1], label)
+            label = '%s$%s' % (self.functions[-1], label)
         
         self.write(
             '@%s' % label,
             '0;JMP'
         )
 
-    def writeIf(self, label):''
+    def writeIf(self, label):
         if self.functions[-1] == None:
-            label = '(%s)' % label
+            label = '%s' % label
         else:
-            label = '(%s$%s)' % (self.functions[-1], label)
+            label = '%s$%s' % (self.functions[-1], label)
 
         self.write(
             '@SP',
@@ -381,9 +381,9 @@ class VMTranslator(object):
             'D;JNE'
         )
 
-    #############
-    # Functions #
-    #############
+    ####################
+    # Function Calling #
+    ####################
 
     def writeCall(self, functionName, numArgs):
         """Call function
@@ -402,9 +402,6 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
-
-        self.functions.append(functionName)
-
         self.write(
             '@%s$return-address' % (functionName),
             'D=A',
@@ -437,10 +434,10 @@ class VMTranslator(object):
         self.writeGoto(functionName)
         self.writeLabel('return-address')
 
+        self.functions.append(functionName)
+
     def writeFunction(self, functionName, numLocals):
-        self.write(
-            '(%s)' % functionName,
-        )
+        self.writeLabel(functionName)
         for i in range(numLocals):
             self.writePushPop('C_PUSH', 'constant', 0)
 
