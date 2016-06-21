@@ -7,6 +7,10 @@ import logging
 
 class VMTranslator(object):
 
+    ##################
+    # Dunder Methods #
+    ##################
+
     def __init__(self, filepath):
         # Init logger object first.
 
@@ -38,6 +42,8 @@ class VMTranslator(object):
         self.parsers = []  # list of parsers.
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
+
+        self.functions = ['null']
 
         # translate arguments into asm symbols.
         self.segment = {
@@ -82,9 +88,17 @@ class VMTranslator(object):
         """Return length of output file"""
         return self.length
 
+    ##################
+    # Helper Methods #
+    ##################
+
     def setFilename(self, filename):
         """Update filename attribute"""
         self.filename = filename
+
+    def close(self):
+        """Close output file"""
+        self.asm.close()
 
     def write(self, *commands):
         """Helper method. Writes a series of strings to output
@@ -103,7 +117,9 @@ class VMTranslator(object):
             self.asm.write('\n'.join(commands))
             self.asm.write('\n')
 
-    # Translate vmcode to asm.
+    ####################
+    # Stack Operations #
+    ####################
 
     def writeArithmetic(self, arg1):
         """Translate arithmetic commands into hack assembly"""
@@ -291,20 +307,57 @@ class VMTranslator(object):
                     'M=D'
                 )            
 
-    # Generate pushpop commands and then call the above functions.
+    #############
+    # Bootstrap #
+    #############
 
     def writeInit(self):
         """Write bootstrap code"""
-        pass
+        self.write(
+            '@256',
+            'D=A',
+            '@SP',
+            'M=D'
+        )
+        self.writeCall('Sys.init', 0)
+
+    ################
+    # Program Flow #
+    ################
 
     def writeLabel(self, label):
-        pass
+        """Writes a label, meant for locals within functions.
+        
+        Inside function 'mult':
+        >>> self.writeLabel('test_label')
+        '(mult$test_label)'
+
+        Globally:
+        >>> self.writeLabel('foo')
+        '(null$foo)'
+        """
+        self.write(
+            '(%s$%s)' % (self.functions[-1], label)
+        )
 
     def writeGoto(self, label):
-        pass
+        self.write(
+            '@%s$%s' % (self.functions[-1], label),
+            '0;JMP'
+        )
 
     def writeIf(self, label):
-        pass
+        self.write(
+            '@SP',
+            'AM=M-1',
+            'D=M',
+            '@%s$%s' % (self.functions[-1], label),
+            'D;JNE'
+        )
+
+    #############
+    # Functions #
+    #############
 
     def writeCall(self, functionName, numArgs):
         pass
@@ -315,7 +368,9 @@ class VMTranslator(object):
     def writeFunction(self, functionName, numLocals):
         pass
 
-    # Run vmcode lines through the above functions and output asm file.
+    #################
+    # Main function #
+    #################
 
     def translate(self):
         
@@ -339,34 +394,43 @@ class VMTranslator(object):
                     self.writePushPop(commandType, arg1, arg2)
 
                 # program flow
-                elif commandType in parser.C_LABEL:
-                    pass
-                elif commandType in parser.C_GOTO:
-                    pass
-                elif commandType in parser.C_IF:
-                    pass
+                elif commandType == parser.C_LABEL:
+                    self.writeLabel(arg1)
+                elif commandType == parser.C_GOTO:
+                    self.writeGoto(arg1)
+                elif commandType == parser.C_IF:
+                    self.writeIf(arg1)
 
                 # function calling.
-                elif commandType in parser.C_CALL:
-                    pass
-                elif commandType in parser.C_RETURN:
-                    pass
-                elif commandType in parser.C_FUNCTION:
-                    pass
+                elif commandType == parser.C_CALL:
+                    self.writeCall(arg1, arg2)
+                elif commandType == parser.C_RETURN:
+                    self.writeReturn()
+                elif commandType == parser.C_FUNCTION:
+                    self.writeFunction(arg1, arg2)
 
-        self.asm.close()
+        self.close()
 
 if __name__ == '__main__':
 
-    while True:
+    def exit():
+        sys.exit()
+        quit()
 
+    while True:
+        # Try to input filepath, keep trying until correct input
+        # or 'quit' keyword.
         try:
             print("Enter filepath. Relative paths to the cwd are acceptable.")
+            print("Enter 'quit' or 'q' to exit.")
             filepath = input()
-            if not os.path.exists(filepath):
+            if filepath.startswith('q'):
+                exit()
+            elif not os.path.exists(filepath):
                 raise IOError
 
-            V = VMTranslator(filepath)
+            else:
+                V = VMTranslator(filepath)
 
         except IOError:
             print("IOError. Enter real filepath")
@@ -376,5 +440,4 @@ if __name__ == '__main__':
 
     V.translate()
     print(".asm file generated.")
-    sys.exit()
-    quit()
+    exit()
