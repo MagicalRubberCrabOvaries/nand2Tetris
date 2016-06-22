@@ -439,9 +439,12 @@ class VMTranslator(object):
             '@SP',
             'D=M',
             '@LCL',
-            'M=D'
+            'M=D',
+
+            # goto functionName
+            '@%s' % functionName,
+            '0;JMP'
         )
-        self.writeGoto(functionName)
         self.writeLabel('return-address')
 
         self.functions.append(functionName)
