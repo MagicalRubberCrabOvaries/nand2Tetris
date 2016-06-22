@@ -229,7 +229,7 @@ class VMTranslator(object):
 
             elif arg1 == 'static':
                 self.write(
-                    '@%s' % (self.filename + '.' + str(arg2)),
+                    '@%s.%d' % (self.filename, arg2),
                     'D=M',
                     '@SP',
                     'A=M',
@@ -273,6 +273,8 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M-1'
                 )
+            else:
+                return None
 
         else:  # C_POP
             if arg1 == 'temp':
@@ -289,7 +291,7 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M-1',
                     'D=M',
-                    '@%s' % (self.filename + '.' + str(arg2)),
+                    '@%s.%d' % (self.filename, arg2),
                     'M=D'
                 )
 
@@ -316,7 +318,18 @@ class VMTranslator(object):
                     'D=M',
                     '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
                     'M=D'
-                )            
+                )
+            elif arg1 in ('LCL', 'ARG', 'THIS', 'THAT'):
+                self.write(
+                    '@SP',
+                    'AM=M-1',
+                    'D=M',
+                    '@%s' % (arg1),
+                    'M=D'
+                )
+                
+            else:
+                None
 
     #############
     # Bootstrap #
