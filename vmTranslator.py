@@ -96,9 +96,14 @@ class VMTranslator(object):
         """Update filename attribute"""
         self.filename = filename
 
-    def close(self):
-        """Close output file"""
-        self.asm.close()
+    def stackLabel(self, label):
+        """Determine whether to use f$b or b syntax."""
+        if self.functions[-1] == None:
+            label = '%s' % label
+        else:
+            label = '%s$%s' % (self.functions[-1], label)
+
+        return label
 
     def write(self, *commands):
         """Helper method. Writes a series of strings to output
@@ -116,6 +121,10 @@ class VMTranslator(object):
         else:
             self.asm.write('\n'.join(commands))
             self.asm.write('\n')
+
+    def close(self):
+        """Close output file"""
+        self.asm.close()
 
     ####################
     # Stack Operations #
@@ -327,7 +336,7 @@ class VMTranslator(object):
                     '@%s' % (arg1),
                     'M=D'
                 )
-                
+
             else:
                 None
 
@@ -360,32 +369,18 @@ class VMTranslator(object):
         >>> self.writeLabel('foo')
         '(foo)'
         """
-        if self.functions[-1] == None:
-            label = '%s' % label
-        else:
-            label = '%s$%s' % (self.functions[-1], label)
-        
-        self.write(
-            '(%s)' % label
-        )
+        label = self.stackLabel(label)
+        self.write('(%s)' % label)
 
     def writeGoto(self, label):
-        if self.functions[-1] == None:
-            label = '%s' % label
-        else:
-            label = '%s$%s' % (self.functions[-1], label)
-        
+        label = self.stackLabel(label)
         self.write(
             '@%s' % label,
             '0;JMP'
         )
 
     def writeIf(self, label):
-        if self.functions[-1] == None:
-            label = '%s' % label
-        else:
-            label = '%s$%s' % (self.functions[-1], label)
-
+        label = self.stackLabel(label)
         self.write(
             '@SP',
             'AM=M-1',
@@ -415,12 +410,9 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
-        label = 'return-address'
-        if self.functions[-1] == None:
-            label = '%s' % label
-        else:
-            label = '%s$%s' % (self.functions[-1], label)
+        self.functions.append(functionName)
 
+        label = self.stackLabel('return-address')
         self.write(
             '@%s' % label,
             'D=A',
@@ -444,6 +436,7 @@ class VMTranslator(object):
             'D=M-D',
             '@ARG',
             'M=D',
+        
             # LCL = SP
             '@SP',
             'D=M',
@@ -452,8 +445,6 @@ class VMTranslator(object):
         )
         self.writeGoto(functionName)
         self.writeLabel('return-address')
-
-        self.functions.append(functionName)
 
     def writeFunction(self, functionName, numLocals):
         self.writeLabel(functionName)
@@ -470,7 +461,7 @@ class VMTranslator(object):
             # Store return value (top of stack)
             # in current arg 0
             '@SP',
-            'A=M',
+            'AM=M-1',
             'D=M', # Retrieve return val.
             '@ARG', 
             'A=M', # Point A register at arg 0.
@@ -538,7 +529,7 @@ class VMTranslator(object):
 
     def translate(self):
         
-        self.writeInit()  # bootstrap
+        #self.writeInit()  # bootstrap
 
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
