@@ -43,7 +43,7 @@ class VMTranslator(object):
         self.length = 0  # length of out file.
         self.compare_index = 0  # index for comparison operations.
 
-        self.functions = [None]
+        self.functions = []
 
         # translate arguments into asm symbols.
         self.segment = {
@@ -98,10 +98,10 @@ class VMTranslator(object):
 
     def stackLabel(self, label):
         """Determine whether to use f$b or b syntax."""
-        if self.functions[-1] == None:
-            label = '%s' % label
+        if self.functions == []:
+            pass
         else:
-            label = '%s$%s' % (self.functions[-1], label)
+            label = '%s$%s' % ('$'.join(self.functions), label)
 
         return label
 
@@ -410,6 +410,8 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
+        self.functions.append(functionName)
+
         label = self.stackLabel('return-address')
         self.write(
             '@%s' % label,
