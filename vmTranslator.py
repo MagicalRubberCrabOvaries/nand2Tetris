@@ -443,14 +443,16 @@ class VMTranslator(object):
 
             # goto functionName
             '@%s' % functionName,
-            '0;JMP'
+            '0;JMP',
+
+            # Return declaration.
+            '(%s)' % label
         )
-        self.writeLabel('return-address')
 
         self.functions.append(functionName)
 
     def writeFunction(self, functionName, numLocals):
-        self.writeLabel(functionName)
+        self.write('(%s)' % functionName)
         for i in range(numLocals):
             self.writePushPop('C_PUSH', 'constant', 0)
 
