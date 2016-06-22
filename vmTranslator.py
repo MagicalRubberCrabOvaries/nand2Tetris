@@ -44,6 +44,7 @@ class VMTranslator(object):
         self.compare_index = 0  # index for comparison operations.
 
         self.functions = []
+        self.callIndex = 0
 
         # translate arguments into asm symbols.
         self.segment = {
@@ -98,10 +99,10 @@ class VMTranslator(object):
 
     def stackLabel(self, label):
         """Determine whether to use f$b or b syntax."""
-        if self.functions == []:
+        if self.functions == [] or '$' in label:
             pass
         else:
-            label = '%s$%s' % ('$'.join(self.functions), label)
+            label = '%s$%s' % (self.functions[-1], label)
 
         return label
 
@@ -410,9 +411,9 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
-        self.functions.append(functionName)
 
-        label = self.stackLabel('return-address')
+        label = 'return-address_%d' % self.callIndex
+
         self.write(
             '@%s' % label,
             'D=A',
@@ -451,9 +452,11 @@ class VMTranslator(object):
             '(%s)' % label
         )
 
-        self.functions.append(functionName)
+        self.callIndex += 1
 
     def writeFunction(self, functionName, numLocals):
+        self.functions.append(functionName)
+
         self.write('(%s)' % functionName)
         for i in range(numLocals):
             self.writePushPop('C_PUSH', 'constant', 0)
@@ -528,7 +531,6 @@ class VMTranslator(object):
             #'@R6', # point at R6
             #'M=D',            
         )
-        del self.functions[-1]
 
     #################
     # Main function #
