@@ -467,16 +467,11 @@ class VMTranslator(object):
         # SP will be repositioned to ARG + 1
         # LCL, ARG, THIS, and THAT will then be
         # restored to previous values.
-        self.write(
-            # Store return value (top of stack)
-            # in current arg 0
-            '@SP',
-            'AM=M-1',
-            'D=M', # Retrieve return val.
-            '@ARG', 
-            'A=M', # Point A register at arg 0.
-            'M=D', # store return value in arg 0.
 
+        # Store top of stack in arg 0.
+        self.writePushPop('C_PUSH', 'argument', 0)
+
+        self.write(
             # Reposition SP to ARG+1.
             # Already pointing at arg 0
             'D=A+1',
@@ -486,22 +481,22 @@ class VMTranslator(object):
             # Store LCL in temporary variable.
             '@LCL',
             'D=M',
-            '@R14', # FRAME
+            '@R14',  # FRAME
             'M=D',
 
             # Restore THAT
             # A already pointing @R5
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
-            '@THAT', # Point at THAT register.
-            'M=D', # restore THAT
+            '@THAT',  # Point at THAT register.
+            'M=D',  # restore THAT
 
             # Restore THIS
             '@R14', 
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
-            '@THIS', # Point at THIS register.
-            'M=D', # restore THIS
+            '@THIS',  # Point at THIS register.
+            'M=D',  # restore THIS
             
             # Restore ARG
             '@R14',
@@ -520,6 +515,7 @@ class VMTranslator(object):
             # Go to return address
             '@R14',
             'AM=M-1',  # Decrement FRAME 
+            'A=M', # retrieve return address.
             '0;JMP' # goto return address.
 
             # Here, commented out asm code for
