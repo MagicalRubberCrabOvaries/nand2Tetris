@@ -529,7 +529,7 @@ class VMTranslator(object):
 
     def translate(self):
         
-        #self.writeInit()  # bootstrap
+        self.writeInit()  # bootstrap
 
         # loop over each parser for each .vm file.
         self.logger.info("Iter over parsers.")
