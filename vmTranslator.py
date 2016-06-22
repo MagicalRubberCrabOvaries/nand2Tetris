@@ -410,8 +410,6 @@ class VMTranslator(object):
         Finally, after this call, append functionName to self.functions
         to identify functions.
         """
-        self.functions.append(functionName)
-
         label = self.stackLabel('return-address')
         self.write(
             '@%s' % label,
@@ -445,6 +443,8 @@ class VMTranslator(object):
         )
         self.writeGoto(functionName)
         self.writeLabel('return-address')
+
+        self.functions.append(functionName)
 
     def writeFunction(self, functionName, numLocals):
         self.writeLabel(functionName)
