@@ -280,7 +280,7 @@ class VMTranslator(object):
                     'A=M',
                     'M=D',
                     '@SP',
-                    'AM=M-1'
+                    'AM=M+1'
                 )
             else:
                 return None
