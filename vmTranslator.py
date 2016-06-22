@@ -1,4 +1,4 @@
- #! python3
+#! python3
 import jack
 import os
 import sys
@@ -458,8 +458,10 @@ class VMTranslator(object):
         self.functions.append(functionName)
 
         self.write('(%s)' % functionName)
-        for i in range(numLocals):
-            self.writePushPop('C_PUSH', 'constant', 0)
+
+        if numLocals > 0:
+            for i in range(numLocals):
+                self.writePushPop('C_PUSH', 'constant', 0)
 
     def writeReturn(self):
         # Return value will be at top of stack.
