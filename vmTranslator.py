@@ -480,13 +480,13 @@ class VMTranslator(object):
             # FRAME = LCL // Frame is a temp var.
             '@LCL',
             'D=M',
-            '@R13',  # FRAME
+            '@R5',  # FRAME
             'M=D',
 
             # RET = *(FRAME-5)
             '@5',
             'D=D-A',
-            '@R14', # RET
+            '@R6', # RET
             'M=D'
         )
         self.writePushPop('C_POP', 'constant', 0)
@@ -498,14 +498,14 @@ class VMTranslator(object):
             'M=D',
         
             # THAT = *(FRAME-1)
-            '@R13',
+            '@R5',
             'A=M-1',
             'D=M',
             '@THAT',
             'M=D',
 
             # THIS = *(FRAME-2)
-            '@R13',
+            '@R5',
             'D=M',
             '@2',
             'A=D-A',
@@ -513,7 +513,7 @@ class VMTranslator(object):
             'M=D',
 
             # ARG = *(FRAME-3)
-            '@R13',
+            '@R5',
             'D=M',
             '@3',
             'A=D-A',
@@ -522,7 +522,7 @@ class VMTranslator(object):
             'M=D',
 
             # LCL = *(FRAME-4)
-            '@R13',
+            '@R5',
             'D=M',
             '@4',
             'A=D-A',
@@ -540,7 +540,7 @@ class VMTranslator(object):
 
         self.write(
             # goto return-address.
-            '@R14',
+            '@R6',
             'A=M',
             'A=M',
             '0;JMP'
