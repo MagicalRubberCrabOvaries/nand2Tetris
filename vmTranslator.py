@@ -533,7 +533,8 @@ class VMTranslator(object):
             'M=D',  # store contents of FRAME - 5.
 
             # Go to return address
-            'A=M',  # retrieve addresses.
+            'A=M',  # retrieve return address pointer.
+            'A=M',  # goto return address.
             '0;JMP'  # goto return address.       
         )
 
