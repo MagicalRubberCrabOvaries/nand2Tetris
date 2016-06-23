@@ -380,6 +380,7 @@ class VMTranslator(object):
         self.write('(%s)' % label)
 
     def writeGoto(self, label):
+        """Unconditional goto to label arg"""
         label = self.stackLabel(label)
         self.write(
             '@%s' % label,
@@ -387,6 +388,7 @@ class VMTranslator(object):
         )
 
     def writeIf(self, label):
+        """Goto if top of stack is anything but zero"""
         label = self.stackLabel(label)
         self.write(
             '@SP',
