@@ -86,7 +86,7 @@ class VMTranslator(object):
                     self.logger.info('%s opened for parsing.' % (folderName + filename))
                     parsers.append(os.path.join(folderName, filename))
 
-        sorted(parsers)
+        parsers.sort()
 
         for parser in parsers:
             self.parsers.append(jack.VMParser(parser))
