@@ -449,7 +449,7 @@ class VMTranslator(object):
             'D=M',
             '@LCL',
             'M=D',
-
+        
             # goto functionName
             '@%s' % functionName,
             '0;JMP',
@@ -474,53 +474,64 @@ class VMTranslator(object):
         # Pop into argument 0.
         # SP will be repositioned to ARG + 1
         # LCL, ARG, THIS, and THAT will then be
-        # restored to previous values.
-
-        # Store top of stack in arg 0.
-        self.writePushPop('C_POP', 'argument', 0)
+        # restored to previous values. 
 
         self.write(
-            # Reposition SP to ARG+1.
-            # SP already pointing to it.
-            # Already pointing at arg 0
-            'D=A+1',
-            '@SP',
-            'M=D',
-
-            # Store LCL in temp var FRAME.
+            # FRAME = LCL // Frame is a temp var.
             '@LCL',
             'D=M',
-            '@R14',  # FRAME temp var.
+            '@R13',  # FRAME
             'M=D',
-            
-            # Restore THAT
-            # A register already pointing @R14
-            'AM=M-1',  # Decrement FRAME 
-            'D=M',  # Retrieve value.
-            '@THAT',  # Point at THAT register.
-            'M=D',  # restore THAT
 
-            # Restore THIS
-            '@R5', 
-            'AM=M-1',  # Decrement FRAME 
-            'D=M',  # Retrieve value.
-            '@THIS',  # Point at THIS register.
-            'M=D',  # restore THIS
-            
-            # Restore ARG
-            '@R5',
-            'AM=M-1',  # Decrement FRAME 
-            'D=M',  # Retrieve value.
-            '@ARG',  # Point at ARG register.
-            'M=D',  # restore ARG
+            # RET = *(FRAME-5)
+            '@5',
+            'D=D-A',
+            '@R14', # RET
+            'M=D',
+        
+            # *ARG = pop()
+            '@SP',
+            'A=M',
+            'D=M',
+            '@ARG',
+            'A=M',
+            'M=D',
 
-            # Restore LCL
-            '@R5',
-            'AM=M-1',  # Decrement FRAME 
-            'D=M',  # Retrieve value.
-            '@LCL',  # Point at LCL register.
-            'M=D',  # restore LCL
+            # SP = ARG+1
+            '@ARG',
+            'D=M+1',
+            '@SP',
+            'M=D',
+        
+            # THAT = *(FRAME-1)
+            '@R13',
+            'D=M-1',
+            '@THAT',
+            'M=D',
 
+            # THIS = *(FRAME-2)
+            '@R13',
+            'D=M',
+            '@2',
+            'D=D-A',
+            '@THIS',
+            'M=D',
+
+            # ARG = *(FRAME-3)
+            '@R13',
+            'D=M',
+            '@3',
+            'D=D-A',
+            '@ARG',
+            'M=D',
+
+            # LCL = *(FRAME-4)
+            '@R13',
+            'D=M',
+            '@4',
+            'D=D-A',
+            '@LCL',
+            'M=D',
         )
 
         # Set all temp registers to 0.
@@ -531,15 +542,11 @@ class VMTranslator(object):
             )
 
         self.write(
-
-            # Store FRAME - 5 in temp 1.
-            '@R5',
-            'AM=M-1',  # Decrement FRAME 
-            
-            # Go to return address
-            'A=M',  # retrieve return address pointer.
-            'A=M',  # return address to A register.
-            '0;JMP'  # goto return address.       
+            # goto return-address.
+            '@R14',
+            'A=M',
+            'A=M',
+            '0;JMP'
         )
 
     #################
