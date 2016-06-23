@@ -477,7 +477,7 @@ class VMTranslator(object):
         # restored to previous values.
 
         # Store top of stack in arg 0.
-        self.writePushPop('C_PUSH', 'argument', 0)
+        self.writePushPop('C_POP', 'argument', 0)
 
         self.write(
             # Reposition SP to ARG+1.
