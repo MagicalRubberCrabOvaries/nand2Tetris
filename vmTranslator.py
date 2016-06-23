@@ -527,14 +527,13 @@ class VMTranslator(object):
 
             # Store FRAME - 5 in temp 1.
             '@R14',
-            'AM=M-1',  # Decrement FRAME 
-            'D=M',  # Retrieve value.
-            '@R6',  # Point at temp 1 register.
+            'AMD=M-1',  # Decrement FRAME 
+            '@R6',  # temp 1
             'M=D',  # store contents of FRAME - 5.
 
             # Go to return address
             'A=M',  # retrieve return address pointer.
-            'A=M',  # goto return address.
+            'A=M',  # return address to A register.
             '0;JMP'  # goto return address.       
         )
 
