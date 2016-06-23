@@ -487,16 +487,10 @@ class VMTranslator(object):
             '@5',
             'D=D-A',
             '@R14', # RET
-            'M=D',
-        
-            # *ARG = pop()
-            '@SP',
-            'A=M',
-            'D=M',
-            '@ARG',
-            'A=M',
-            'M=D',
-
+            'M=D'
+        )
+        self.writePushPop('C_POP', 'constant', 0)
+        self.write(
             # SP = ARG+1
             '@ARG',
             'D=M+1',
