@@ -490,11 +490,9 @@ class VMTranslator(object):
             # Store LCL in temp var FRAME.
             '@LCL',
             'D=M',
-            '@R5',  # FRAME temp var.
+            '@R14',  # FRAME temp var.
             'M=D',
-            '@R14',  # Register used to count down from FRAME
-            'M=D',
-
+            
             # Restore THAT
             # A register already pointing @R14
             'AM=M-1',  # Decrement FRAME 
@@ -503,32 +501,41 @@ class VMTranslator(object):
             'M=D',  # restore THAT
 
             # Restore THIS
-            '@R14', 
+            '@R5', 
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THIS',  # Point at THIS register.
             'M=D',  # restore THIS
             
             # Restore ARG
-            '@R14',
+            '@R5',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@ARG',  # Point at ARG register.
             'M=D',  # restore ARG
 
             # Restore LCL
-            '@R14',
+            '@R5',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@LCL',  # Point at LCL register.
             'M=D',  # restore LCL
 
-            # Store FRAME - 5 in temp 1.
-            '@R14',
-            'AMD=M-1',  # Decrement FRAME 
-            '@R6',  # temp 1
-            'M=D',  # store contents of FRAME - 5.
+        )
 
+        # Set all temp registers to 0.
+        for i in range(8):
+            self.write(
+                'R%d' % (5 + i),
+                'M=0'
+            )
+
+        self.write(
+
+            # Store FRAME - 5 in temp 1.
+            '@R5',
+            'AM=M-1',  # Decrement FRAME 
+            
             # Go to return address
             'A=M',  # retrieve return address pointer.
             'A=M',  # return address to A register.
