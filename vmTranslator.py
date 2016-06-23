@@ -68,6 +68,7 @@ class VMTranslator(object):
         # .vm object in directory and subdirectory.
         self.logger.info("walking %s" % self.filepath)
 
+        parsers = []  # Local var for names of vm files. Name is legacy.
         for folderName, subfolders, filenames in os.walk(self.filepath):
             self.logger.info("Now in %s" % folderName)
 
@@ -83,7 +84,12 @@ class VMTranslator(object):
                 # only open files with .vm extension.
                 if filename.endswith('.vm'):
                     self.logger.info('%s opened for parsing.' % (folderName + filename))
-                    self.parsers.append(jack.VMParser(os.path.join(folderName, filename)))
+                    parsers.append(os.path.join(folderName, filename))
+
+            sorted(parsers)
+
+            for parser in parsers:
+                self.parsers.append(jack.VMParser(parser))
 
     def __len__(self):
         """Return length of output file"""
