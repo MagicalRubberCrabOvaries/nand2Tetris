@@ -483,7 +483,7 @@ class VMTranslator(object):
             # Reposition SP to ARG+1.
             # SP already pointing to it.
             # Already pointing at arg 0
-            'D=A',
+            'D=A+1',
             '@SP',
             'M=D',
 
