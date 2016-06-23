@@ -481,8 +481,9 @@ class VMTranslator(object):
 
         self.write(
             # Reposition SP to ARG+1.
+            # SP already pointing to it.
             # Already pointing at arg 0
-            'D=A+1',
+            'D=A',
             '@SP',
             'M=D',
 
