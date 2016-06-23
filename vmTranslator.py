@@ -484,7 +484,7 @@ class VMTranslator(object):
             'M=D',
 
             # RET = *(FRAME-5)
-            '@5',
+            # already pointing @R5
             'D=D-A',
             '@R6', # RET
             'M=D'
