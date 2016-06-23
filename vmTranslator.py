@@ -489,54 +489,52 @@ class VMTranslator(object):
             '@SP',
             'M=D',
 
-            # Store LCL in temporary variable.
+            # Store LCL in temp var FRAME.
             '@LCL',
             'D=M',
-            '@R14',  # FRAME
+            '@R5',  # FRAME
+            'M=D',
+
+            # Store return-address in temp var
+            '@5',  # Get constant.
+            'D=D-A',  # FRAME-5 points to return-address.
+            'A=D',  # goto FRAME-5 
+            'D=M',  # retrieve address.
+            '@R6',  # Store var 
             'M=D',
 
             # Restore THAT
-            # A already pointing @R5
+            '@R5',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THAT',  # Point at THAT register.
             'M=D',  # restore THAT
 
             # Restore THIS
-            '@R14', 
+            '@R5', 
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THIS',  # Point at THIS register.
             'M=D',  # restore THIS
             
             # Restore ARG
-            '@R14',
+            '@R5',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
-            '@ARG', # Point at ARG register.
-            'M=D', # restore ARG
+            '@ARG',  # Point at ARG register.
+            'M=D',  # restore ARG
 
             # Restore LCL
-            '@R14',
+            '@R5',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
-            '@LCL', # Point at LCL register.
-            'M=D', # restore LCL
+            '@LCL',  # Point at LCL register.
+            'M=D',  # restore LCL
 
             # Go to return address
-            '@R14',
-            'AM=M-1',  # Decrement FRAME 
-            'A=M', # retrieve return address.
-            '0;JMP' # goto return address.
-
-            # Here, commented out asm code for
-            # storing return address in temp var
-            # it seemed unnecessary, so it is left
-            # commented for testing purposes.
-
-            #'D=M',  # Retrieve value.
-            #'@R6', # point at R6
-            #'M=D',            
+            '@R6',  # pointer
+            'A=M',  # retrieve addresses.
+            '0;JMP'  # goto return address.       
         )
 
     #################
