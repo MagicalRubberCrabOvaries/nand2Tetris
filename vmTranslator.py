@@ -497,16 +497,8 @@ class VMTranslator(object):
             '@R14',  # Register used to count down from FRAME
             'M=D',
 
-            # Store return-address in temp var
-            '@5',  # Get constant.
-            'D=D-A',  # FRAME-5 points to return-address.
-            'A=D',  # goto FRAME-5 
-            'D=M',  # retrieve address.
-            '@R6',  # Store var 
-            'M=D',
-
             # Restore THAT
-            '@R14',
+            # A register already pointing @R14
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THAT',  # Point at THAT register.
@@ -533,8 +525,14 @@ class VMTranslator(object):
             '@LCL',  # Point at LCL register.
             'M=D',  # restore LCL
 
+            # Store FRAME - 5 in temp 1.
+            '@R14',
+            'AM=M-1',  # Decrement FRAME 
+            'D=M',  # Retrieve value.
+            '@R6',  # Point at temp 1 register.
+            'M=D',  # store contents of FRAME - 5.
+
             # Go to return address
-            '@R6',  # pointer
             'A=M',  # retrieve addresses.
             '0;JMP'  # goto return address.       
         )
