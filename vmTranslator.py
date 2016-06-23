@@ -533,7 +533,7 @@ class VMTranslator(object):
 
             # Go to return address
             'A=M',  # retrieve return address pointer.
-            'A=M',  # return address to A register.
+            #'A=M',  # return address to A register.
             '0;JMP'  # goto return address.       
         )
 
