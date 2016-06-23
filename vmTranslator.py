@@ -449,7 +449,7 @@ class VMTranslator(object):
             'D=M',
             '@LCL',
             'M=D',
-        
+
             # goto functionName
             '@%s' % functionName,
             '0;JMP',
@@ -505,7 +505,8 @@ class VMTranslator(object):
         
             # THAT = *(FRAME-1)
             '@R13',
-            'D=M-1',
+            'A=M-1',
+            'D=M',
             '@THAT',
             'M=D',
 
@@ -513,7 +514,7 @@ class VMTranslator(object):
             '@R13',
             'D=M',
             '@2',
-            'D=D-A',
+            'A=D-A',
             '@THIS',
             'M=D',
 
@@ -521,7 +522,8 @@ class VMTranslator(object):
             '@R13',
             'D=M',
             '@3',
-            'D=D-A',
+            'A=D-A',
+            'D=M',
             '@ARG',
             'M=D',
 
@@ -529,9 +531,10 @@ class VMTranslator(object):
             '@R13',
             'D=M',
             '@4',
-            'D=D-A',
+            'A=D-A',
+            'D=M',
             '@LCL',
-            'M=D',
+            'M=D'
         )
 
         # Set all temp registers to 0.
