@@ -492,7 +492,9 @@ class VMTranslator(object):
             # Store LCL in temp var FRAME.
             '@LCL',
             'D=M',
-            '@R5',  # FRAME
+            '@R5',  # FRAME temp var.
+            'M=D',
+            '@R14',  # Register used to count down from FRAME
             'M=D',
 
             # Store return-address in temp var
@@ -504,28 +506,28 @@ class VMTranslator(object):
             'M=D',
 
             # Restore THAT
-            '@R5',
+            '@R14',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THAT',  # Point at THAT register.
             'M=D',  # restore THAT
 
             # Restore THIS
-            '@R5', 
+            '@R14', 
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@THIS',  # Point at THIS register.
             'M=D',  # restore THIS
             
             # Restore ARG
-            '@R5',
+            '@R14',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@ARG',  # Point at ARG register.
             'M=D',  # restore ARG
 
             # Restore LCL
-            '@R5',
+            '@R14',
             'AM=M-1',  # Decrement FRAME 
             'D=M',  # Retrieve value.
             '@LCL',  # Point at LCL register.
