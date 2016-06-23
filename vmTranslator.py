@@ -526,7 +526,7 @@ class VMTranslator(object):
         # Set all temp registers to 0.
         for i in range(8):
             self.write(
-                'R%d' % (5 + i),
+                '@R%d' % (5 + i),
                 'M=0'
             )
 
