@@ -437,10 +437,8 @@ class VMTranslator(object):
         self.writePushPop('C_PUSH', 'THAT', None)
         self.write(
             # ARG = SP-n-5
-            '@5',
+            '@%d' % (5 + numArgs),
             'D=A',
-            '@%d' % numArgs,
-            'D=D+A',
             '@SP',
             'D=M-D',
             '@ARG',
@@ -533,7 +531,7 @@ class VMTranslator(object):
 
             # Go to return address
             'A=M',  # retrieve return address pointer.
-            #'A=M',  # return address to A register.
+            'A=M',  # return address to A register.
             '0;JMP'  # goto return address.       
         )
 
