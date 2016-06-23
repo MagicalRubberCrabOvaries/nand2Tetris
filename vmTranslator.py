@@ -86,10 +86,10 @@ class VMTranslator(object):
                     self.logger.info('%s opened for parsing.' % (folderName + filename))
                     parsers.append(os.path.join(folderName, filename))
 
-            sorted(parsers)
+        sorted(parsers)
 
-            for parser in parsers:
-                self.parsers.append(jack.VMParser(parser))
+        for parser in parsers:
+            self.parsers.append(jack.VMParser(parser))
 
     def __len__(self):
         """Return length of output file"""
