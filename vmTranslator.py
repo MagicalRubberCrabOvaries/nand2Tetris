@@ -510,6 +510,11 @@ class VMTranslator(object):
             'D=M',
             '@LCL',
             'M=D'
+
+            # Retrieve return-address.
+            '@R6',
+            'A=M',
+            'D=M'
         )
 
         # Set all temp registers to 0.
@@ -520,10 +525,8 @@ class VMTranslator(object):
             )
 
         self.write(
-            # goto return-address.
-            '@R6',
-            'A=M',
-            'A=M',
+            # goto return address.
+            'A=D',
             '0;JMP'
         )
 
