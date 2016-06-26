@@ -315,6 +315,7 @@ class VMTranslator(object):
                     '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
                     'M=D'
                 )
+                
             elif arg1 in ('LCL', 'ARG', 'THIS', 'THAT'):
                 self.write(
                     '@SP',
@@ -470,7 +471,7 @@ class VMTranslator(object):
             'M=D'
         )
         self.writePushPop('C_POP', 'argument', 0)
-        self.write(
+        self.write(  # Restore pointers.
             # SP = ARG+1
             '@ARG',
             'D=M',
@@ -509,11 +510,10 @@ class VMTranslator(object):
             'A=D-A',
             'D=M',
             '@LCL',
-            'M=D'
+            'M=D',
 
-            # Retrieve return-address.
+            # Store return address in D register
             '@R6',
-            'A=M',
             'D=M'
         )
 
@@ -524,9 +524,9 @@ class VMTranslator(object):
                 'M=0'
             )
 
-        self.write(
-            # goto return address.
+        self.write(  # goto return address.
             'A=D',
+            'A=M',
             '0;JMP'
         )
 
