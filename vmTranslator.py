@@ -269,6 +269,7 @@ class VMTranslator(object):
                     '@SP',
                     'AM=M+1'
                 )
+            
             else:
                 return None
 
@@ -315,7 +316,7 @@ class VMTranslator(object):
                     '@%s' % ('THIS' if arg2 == 0 else 'THAT'),
                     'M=D'
                 )
-                
+
             elif arg1 in ('LCL', 'ARG', 'THIS', 'THAT'):
                 self.write(
                     '@SP',
