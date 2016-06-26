@@ -61,6 +61,13 @@ class VMTranslator(object):
             'gt': 'D;JLT'
         }
 
+        self.op = {
+            'add': '+',
+            'sub': '-',
+            'and': '&',
+            'or': '|'
+        }
+
         # With logger object, announce that an Assembler has been initialized.
         self.logger.debug("Assembler initialized {}".format(self.filepath))
 
@@ -154,40 +161,13 @@ class VMTranslator(object):
                 'AM=M+1'  # increment stack pointer and A register
             )
 
-        elif arg1 == 'add':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',  # retrieve top of stack.
-                'A=A-1',
-                'M=D+M'  # retrieve next stack entry, add, and restore.
-            )
-
-        elif arg1 == 'sub':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=-M', 
-                'A=A-1',
-                'M=D+M'
-            )
-
-        elif arg1 == 'and':
+        elif arg1 in ('add', 'sub', 'and', 'or'):
             self.write(
                 '@SP',
                 'AM=M-1',
                 'D=M',
                 'A=A-1',
-                'M=D&M'
-            )
-
-        elif arg1 == 'or':
-            self.write(
-                '@SP',
-                'AM=M-1',
-                'D=M',
-                'A=A-1',
-                'M=D|M'
+                'M=M%sD' % self.op[arg1] 
             )
 
         elif arg1 in ('eq', 'lt', 'gt'):
