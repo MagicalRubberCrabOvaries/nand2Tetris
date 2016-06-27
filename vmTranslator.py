@@ -130,11 +130,10 @@ class VMTranslator(object):
         """
 
         self.length += len(commands)
-        if len(commands) == 1:
+        if len(commands) <= 1:
             self.asm.write(commands[0] + '\n')
         else:
-            self.asm.write('\n'.join(commands))
-            self.asm.write('\n')
+            self.asm.write('\n'.join(commands) + '\n')
 
     def close(self):
         """Close output file"""
@@ -465,9 +464,12 @@ class VMTranslator(object):
             '@R5',  # FRAME
             'M=D',
 
-            # RET = *(FRAME-5)
+            # *(FRAME-5) points at register with return address.
             # Already @5
             'D=D-A',
+            'A=D',
+            'D=M'
+
             '@R6', # RET
             'M=D'
         )
@@ -527,7 +529,6 @@ class VMTranslator(object):
 
         self.write(  # goto return address.
             'A=D',
-            'A=M',
             '0;JMP'
         )
 
