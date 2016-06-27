@@ -468,7 +468,7 @@ class VMTranslator(object):
             # Already @5
             'D=D-A',
             'A=D',
-            'D=M'
+            'D=M',
 
             '@R6', # RET
             'M=D'
