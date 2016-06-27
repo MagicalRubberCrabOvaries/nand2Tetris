@@ -442,6 +442,7 @@ class VMTranslator(object):
         self.callIndex += 1
 
     def writeFunction(self, functionName, numLocals):
+        """Declares a function and inits local vars to 0."""
         self.functions.append(functionName)
 
         self.write('(%s)' % functionName)
