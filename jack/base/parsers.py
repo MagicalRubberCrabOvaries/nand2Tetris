@@ -4,6 +4,7 @@
 # Jack  Virtual Machine, and Jack Compiler.
 
 import os
+import re
 
 class BaseParser(object):
     """Parent class for all parsers"""
@@ -17,8 +18,18 @@ class BaseParser(object):
         srcFile.close()
 
         lines = []
+        commented = False
         for line in rawText:
-            if line not in ('', '\n') and not line.startswith('//'):
+            if commented:
+                if '*/' in line:
+                    commented = False
+                else:
+                    continue
+
+            elif line.startswith('/*') and not commented:
+                commented = True
+
+            elif line not in ('', '\n') and not line.startswith('//'):
                 lines.append(line[:line.find('//')].strip())
 
         self.lines = lines
@@ -247,11 +258,14 @@ class JackTokenizer(BaseParser):
     # Note: .hasMoreCommands() instead
     # measures tokens.
 
-    def __init__(self):
-        pass
+    def __init__(self, filepath):
+        super(JackTokenizer, self).__init__(filepath)
 
     def __iter__(self):
         pass
+
+    def tokenize(self):
+        text = ''.join(self.lines)
 
     def tokenType(self):
         pass
