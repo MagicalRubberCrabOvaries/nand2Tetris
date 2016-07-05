@@ -5,6 +5,7 @@
 
 import os
 import re
+import collections
 
 class BaseParser(object):
     """Parent class for all parsers"""
@@ -27,6 +28,10 @@ class BaseParser(object):
                     continue
 
             elif line.startswith('/*') and not commented:
+                commented = True
+
+            elif '/*' in line:
+                lines.append(line[:line.find('/*')].strip())
                 commented = True
 
             elif line not in ('', '\n') and not line.startswith('//'):
@@ -261,11 +266,26 @@ class JackTokenizer(BaseParser):
     def __init__(self, filepath):
         super(JackTokenizer, self).__init__(filepath)
 
+        # Lexical Elements
+
+        re.compile(
+            """
+            """
+            ,
+            re.X
+        )
+
+        # Tokenizing
+        text = ''.join(self.lines)
+        string = ''
+        tokens = []
+
+        for i in range(len(text)-1):
+            string += text[i]
+
+
     def __iter__(self):
         pass
-
-    def tokenize(self):
-        text = ''.join(self.lines)
 
     def tokenType(self):
         pass
