@@ -5,7 +5,7 @@
 
 import os
 import re
-import collections
+
 
 class BaseParser(object):
     """Parent class for all parsers"""
@@ -116,12 +116,9 @@ class AssemblyParser(BaseParser):
     # Creates markers for jump points in symbol table.
     # This pseudo-command only affects the assembler and not the hardware.
 
-    def __init__(self, filepath):
-
-        super(AssemblyParser, self).__init__(filepath)
-        self.A_COMMAND = 'A_COMMAND'
-        self.C_COMMAND = 'C_COMMAND'
-        self.L_COMMAND = 'L_COMMAND'
+    A_COMMAND = 'A_COMMAND'
+    C_COMMAND = 'C_COMMAND'
+    L_COMMAND = 'L_COMMAND'
 
     def __iter__(self):
 
@@ -183,17 +180,15 @@ class AssemblyParser(BaseParser):
 
 class VMParser(BaseParser):
 
-    def __init__(self, filepath):
-        super(VMParser, self).__init__(filepath)
-        self.C_ARITHMETIC = 'C_ARITHMETIC'
-        self.C_PUSH = 'C_PUSH'
-        self.C_POP = 'C_POP'
-        self.C_LABEL = 'C_LABEL'
-        self.C_GOTO = 'C_GOTO'
-        self.C_IF = 'C_IF'
-        self.C_FUNCTION = 'C_FUNCTION'
-        self.C_RETURN = 'C_RETURN'
-        self.C_CALL = 'C_CALL'
+    C_ARITHMETIC = 'C_ARITHMETIC'
+    C_PUSH = 'C_PUSH'
+    C_POP = 'C_POP'
+    C_LABEL = 'C_LABEL'
+    C_GOTO = 'C_GOTO'
+    C_IF = 'C_IF'
+    C_FUNCTION = 'C_FUNCTION'
+    C_RETURN = 'C_RETURN'
+    C_CALL = 'C_CALL'
 
     def __iter__(self):
         self.reset()
@@ -260,35 +255,56 @@ class VMParser(BaseParser):
 
 class JackTokenizer(BaseParser):
 
-    # Note: .hasMoreCommands() instead
-    # measures tokens.
+    # Scanner object 
+    tokenRe = re.compile(r"""
+        
+        (class|function|constructor
+        |method|field|static|var|
+        int|char|boolean|void|true|
+        false|null|this|let|do|if|  # --- TOKEN IDs ---
+        else|while|return)          # 1. keyword
+        |([{}()\]\[.,;+-*/&|<>=~])  # 2. symbol
+        |(\d+)                      # 3. int constant
+        |(".*")                     # 4. str constant
+        |(\w+[0-9a-zA-Z_]*)         # 5. identifier
+        """, re.VERBOSE)
 
-    def __init__(self, filepath):
+    KEYWORD = 'KEYWORD'
+    SYMBOL = 'SYMBOL'
+    IDENTIFIER = 'IDENTIFIER'
+    INT_CONST = 'INT_CONST'
+    STRING_CONST = 'STRING_CONST'
+
+    def __init__(filepath):
+        """All references to lines and commands are legacy
+        instead, they refer to tokens.
+        """
         super(JackTokenizer, self).__init__(filepath)
-
-        # Lexical Elements
-
-        re.compile(
-            """
-            """
-            ,
-            re.X
-        )
-
-        # Tokenizing
-        text = ''.join(self.lines)
-        string = ''
-        tokens = []
-
-        for i in range(len(text)-1):
-            string += text[i]
-
+        self.lines = self.tokenize() # Replace lines with tokens.
 
     def __iter__(self):
         pass
 
+    def tokenize(self):
+        """Uses tokenRe regex to scan for tokens
+        append tuple (token_id, token) to local var tokens
+        return tokens
+        """
+        scan = tokenRe.scanner(''.join(self.lines))
+        tokens = []
+        
+        while True:
+            m = scan.match()
+            if not m:
+                break
+            # Store token as dict key with entry being its token id.
+            tokens.append((m.lastindex, repr(m.group(m.lastindex))))
+
+        return tokens
+
     def tokenType(self):
-        pass
+       """ """
+        token_id = self.lines[self.curr_line][0]
 
     def keyWord(self):
         pass
