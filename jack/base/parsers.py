@@ -265,15 +265,17 @@ class JackTokenizer(BaseParser):
         else|while|return)          # 1. keyword
         |([{}()\]\[.,;+-*/&|<>=~])  # 2. symbol
         |(\d+)                      # 3. int constant
-        |(".*")                     # 4. str constant
+        |(\".*\")                   # 4. str constant
         |(\w+[0-9a-zA-Z_]*)         # 5. identifier
         """, re.VERBOSE)
 
     KEYWORD = 'KEYWORD'
     SYMBOL = 'SYMBOL'
-    IDENTIFIER = 'IDENTIFIER'
     INT_CONST = 'INT_CONST'
     STRING_CONST = 'STRING_CONST'
+    IDENTIFIER = 'IDENTIFIER'
+
+    TYPES = (KEYWORD, SYMBOL, INT_CONST, STRING_CONST, IDENTIFIER)
 
     def __init__(filepath):
         """All references to lines and commands are legacy
@@ -283,7 +285,19 @@ class JackTokenizer(BaseParser):
         self.lines = self.tokenize() # Replace lines with tokens.
 
     def __iter__(self):
-        pass
+        self.reset()
+        for i in range(len(self)):
+            yield (
+
+                self.tokenType()
+
+            )
+            
+            self.advance()
+
+        self.reset()
+
+
 
     def tokenize(self):
         """Uses tokenRe regex to scan for tokens
@@ -303,8 +317,14 @@ class JackTokenizer(BaseParser):
         return tokens
 
     def tokenType(self):
-       """ """
-        token_id = self.lines[self.curr_line][0]
+        """Access current token tuple.
+        First entry is token_id.
+        return lexical constant matching id.
+
+        id is the same as the index in TYPES
+        """
+
+        return self.TYPES[self.lines[self.curr_line][0]]
 
     def keyWord(self):
         pass
