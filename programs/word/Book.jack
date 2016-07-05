@@ -1,0 +1,30 @@
+/* Book object holds a series of pages
+and updates them based on input.
+*/
+
+class Book {
+	/* A book object holds a series of page objects
+	*/
+
+
+	constructor Book new() {
+
+	}
+
+	method void listen() {
+		/* Listens for keyboard input.
+		*/
+	}
+
+	method void updatePages() {
+
+	}
+
+	method void newPage() {
+
+	}
+
+	method void delPage() {
+
+	}
+}

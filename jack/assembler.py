@@ -168,6 +168,8 @@ class Assembler(object):
 
             linenum += 1
 
+        self.saveFile()
+
     def saveFile(self):
         """Writes self.binary to a .bin file."""
 
@@ -177,26 +179,9 @@ class Assembler(object):
                 binaryFile.close()
 
 def main():
-
-    while True:
-
-        try:
-            print("Enter filepath. Relative paths to the cwd are acceptable.")
-            filepath = input()
-            if not os.path.exists(filepath) or not filepath.endswith('.asm'):
-                raise IOError
-
-            A = Assembler(filepath)
-
-        except IOError:
-            print("IOError. Enter real filepath ending in .asm")
-            continue
-
-        break
-
+    A = Assembler(base.getFilepath())
     A.assemble()
-    A.saveFile()
-    print("Done")
+    print('%s' % ".hack file generated.\nDone.")
     sys.exit()
     quit()
 

@@ -578,30 +578,9 @@ class VMTranslator(object):
 
 def main():
 
-    while True:
-        # Try to input filepath, keep trying until correct input
-        # or 'quit' keyword.
-        try:
-            print("Enter filepath. Relative paths to the cwd are acceptable.")
-            print("Enter 'quit' or 'q' to exit.")
-            filepath = input()
-            if filepath.startswith('q'):
-                sys.exit()
-                quit()
-            elif not os.path.exists(filepath):
-                raise IOError
-
-            else:
-                V = VMTranslator(filepath)
-
-        except IOError:
-            print("IOError. Enter real filepath")
-            continue
-
-        break
-
-    V.translate()
-    print(".asm file generated.")
+    Translator = VMTranslator(base.getFilepath())
+    Translator.translate()
+    print('%s' % ".asm file generated.\nDone")
     sys.exit()
     quit()
 

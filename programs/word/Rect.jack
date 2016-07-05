@@ -1,0 +1,127 @@
+/* Rect objects are rectangles.
+Includes collision detection.
+*/
+
+class Rect {
+
+	field int top, left, bottom, right, width, height;
+	field int state; // 0 = invisible, 1 = filled, 2 = bordered
+	field boolean color; // false = white, true = black
+
+	constructor Rect new(
+		int Ax, int Ay,	int Awidth, int Aheight, boolean Acolor
+	) {
+		/** Rect is represented by topleft corner, 
+		height, and width
+		*/
+
+		let y = Ay; // y coord of top side.
+		let x = Ax; // x coord of left side.
+
+		let height = Aheight; // len of y side.
+		let width = Awidth; // len of x side.
+
+		let color = Acolor; // color.
+
+		return this;
+	}
+
+	// Collisions
+
+	method boolean pointInRect(int Ax, int Ay) {
+		/* Determines whether a given point is 
+		inside the Rect object. 
+		If so return true,
+		else return false.
+		*/
+		if ((Ax > x) & (Ax < (x + width)) &
+			(Ay > y) & (Ay < (y + height))
+		) {
+			return true;
+		}
+
+		else {
+			return false;
+		}
+	}
+
+	method boolean collideRects(Rect otherRect) {
+		/* Determines whether another rect has
+		any point inside of it also inside of 
+		this Rect.
+		*/
+
+		if ((x < otherRect.x + otherRect.width) &
+			(x + width > otherRect.x) &
+			(y < otherRect.y + otherRect.height) &
+			(y + height > otherRect.y)
+
+		) {
+
+			return true;
+		}
+
+		else {
+			return false;
+		}
+	}
+
+	// Transformations.
+
+	method void transform(int Ax, int Ay) {
+		/** Two dimensional transformation. */
+		let x = x + Ax;
+		let y = y + Ay;
+		return;
+	}
+
+	method void stretch(int lenx, int leny) {
+		/** Stretching either dimension. */
+		let width = width + lenx;
+		let height = height + leny;
+		return;
+	}
+
+	// Drawing
+
+	method void changeColor() {
+		/** Change the color of the rect. */
+		let color = ~color;
+		return;
+	}
+
+	method void drawFill() {
+		/** Draw filled rectangle over this
+		rect's coords.
+		*/
+        do Screen.setColor(color);
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        return;
+	}
+
+	method void drawBorder() {
+		/** Draw borders over this rect. */
+
+		do Screen.setColor(color);
+		do Screen.drawLine(x, y, x + width, y); // top
+		do Screen.drawLine(x, y, x, y + height); // left
+		do Screen.drawLine(x + width, y, x + width, y + height); // right
+		do Screen.drawLine(x, y + height, x + width, y + height); // bottom
+ 		return;
+	}
+
+    method void erase() {
+    	/** Remove rect from display. */
+        do Screen.setColor(~color);
+        do Screen.drawRectangle(x, y, x + size, y + size);
+        return;
+    }
+
+    // Memory
+
+    method void dispose() {
+        /** Clean up from stack. */
+        do Memory.deAlloc(this);
+        return;
+    }
+}

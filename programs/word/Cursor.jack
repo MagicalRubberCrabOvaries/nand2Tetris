@@ -1,0 +1,30 @@
+/* Cursor object blinks on screen and shows where
+any typed characters will be inserted.
+*/
+
+class Cursor {
+
+	constructor Cursor new() {
+
+	}
+
+	method void blink() {
+
+	}
+
+	method void moveUp() {
+
+	}
+
+	method void moveDown() {
+
+	}
+
+	method void moveLeft() {
+
+	}
+
+	method void moveRight() {
+		
+	}
+}

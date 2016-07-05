@@ -1,0 +1,50 @@
+/* This class creates a page which
+stores enough text to fill up the 
+Hack platform's screen.
+*/
+
+class Page {
+
+	constructor Page new( int ox, int oy, int lenx, int leny) {
+		/* Constructs a page.
+
+		In pixels:
+		lenx is how long the x side of the page is.
+		leny is how long the y side of the page is.
+
+		ox is the origin x coordinate.
+		oy is the origin y coordinate.
+		*/
+	}
+
+	method void write(String text) {
+		/* Add text to page.
+		*/
+	}
+
+	// Helper methods.
+
+	method boolean isFull() {
+		/* Returns True if page is full
+		False if page is not full.
+		*/
+	}
+
+	method int length() {
+		/* Returns length of page string.
+		*/
+	}
+
+	method int length_left() {
+		/* Returns length left before 
+		page is full.
+		*/
+	}
+
+	method boolean exceeds_max() {
+		/* Returns true if dimensions are greater
+		than math.
+		*/
+
+	}
+}

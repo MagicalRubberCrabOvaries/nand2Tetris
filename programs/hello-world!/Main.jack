@@ -1,0 +1,14 @@
+/** Your usual Hello, world! program. 
+Writes "Hello, world!" followed by a 
+newline to screen
+*/
+
+class Main {
+	
+	function main () {
+
+		do Output.printString("Hello, world!");
+		do Output.println();
+		return;
+	}
+}

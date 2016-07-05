@@ -241,6 +241,37 @@ class VMParser(BaseParser):
         else:
             None
 
+
+class JackTokenizer(BaseParser):
+
+    # Note: .hasMoreCommands() instead
+    # measures tokens.
+
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        pass
+
+    def tokenType(self):
+        pass
+
+    def keyWord(self):
+        pass
+
+    def symbol(self):
+        pass
+
+    def identifer(self):
+        pass
+
+    def intVal(self):
+        pass
+
+    def stringVal(self):
+        pass
+
+
 # class MacroParser(AssemblyParser):
 #    # ---J macro ---
 #    # <jump> <address num/symbol>
@@ -301,4 +332,3 @@ class VMParser(BaseParser):
 #              return self.M2_MACRO
 #         else:  # Only other possibility is 3.
 #             return self.M3_MACRO
-            
