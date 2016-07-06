@@ -256,16 +256,12 @@ class VMParser(BaseParser):
 class JackTokenizer(BaseParser):
 
     # Scanner object 
-    tokenRe = re.compile(r"""    
-        (class|function|constructor
-        |method|field|static|var|
-        int|char|boolean|void|true|
-        false|null|this|let|do|if|  # --- TOKEN IDs ---
-        else|while|return)          # 1. keyword
-        |([{}()\]\[.,;+-*/&|<>=~])  # 2. symbol
+    tokenRe = re.compile(r"""
+        (class|function|constructor|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)
+        |([{}\[\]().,;|~&+-/*=<>])  # 2. symbol
         |(\d+)                      # 3. int constant
         |(\".*\")                   # 4. str constant
-        |(\w+[0-9a-zA-Z_]*)         # 5. identifier
+        |(\w+[_0-9A-Za-z]*)         # 5. identifier
         """, re.VERBOSE)
 
     KEYWORD = 'KEYWORD'
@@ -296,19 +292,23 @@ class JackTokenizer(BaseParser):
         self.reset()
 
     def tokenize(self):
-        """Uses tokenRe regex to scan for tokens
-        append tuple (token_id, token) to local var tokens
-        return tokens
-        """
-        scan = self.tokenRe.scanner(''.join(self.lines))
-        tokens = []
+        """Uses tokenRe regex to find all tokens.
+        Number of nonempty group is token id.
         
-        while True:
-            m = scan.match()
-            if not m:
-                break
-            # Store token as dict key with entry being its token id.
-            tokens.append((m.lastindex, repr(m.group(m.lastindex))))
+        return a list of tuples.
+        First tuple entry is token id.
+        Second is token.
+        """
+
+        scan = self.tokenRe.findall(''.join(self.lines))
+        tokens = []
+
+        for token in scan:
+            for i in range(1,6):
+                if token[i] == '':
+                    continue
+                else:
+                    tokens.append((i, token[i]))
 
         return tokens
 
@@ -324,79 +324,19 @@ class JackTokenizer(BaseParser):
 
     def getToken(self):
         ttype = self.tokenType()
+        token = self.lines[self.curr_line][1]
         if ttype in (self.KEYWORD, self.SYMBOL, self.IDENTIFIER):
            # return str val.
-            return self.lines[1]
+            return token
 
         elif ttype == INT_CONST:
             # return int val.
-            return int(self.lines[1])
+            return int(token)
 
         elif ttype == STRING_CONST:
             # return str val.
-            token = self.lines[1]
+            token = self.curr_line[1]
             return token[1:token.find('\"')]
 
         else:  # Indicates a bug. 
             return None
-
-# class MacroParser(AssemblyParser):
-#    # ---J macro ---
-#    # <jump> <address num/symbol>
-#    # A macro of an A command followed by a C command D;<jump>
-#    # If <jump> is JMP, then the C command is instead 0;JMP
-#    #
-#    # ---M macro ---
-#    # A?M[address]?D?=<comp>;<jump>
-#    # <dest>=M[address]in<comp>;<jump>
-#    #
-#    # A macro of an A command and a C command that utilizes the contents of
-#    # that ram address.
-#    #
-#    # A?M[address]D?=M[i];<jump>
-#    #
-#    # ---M2b macro ---
-#    # <dest>=M[address]+M[address2];<jump>
-#    # Macro of 2 M macros
-#    #
-#    # ---M3 macro---
-#    # A?M[address]?D?=M[address2]+M[address3];<jump>
-#    # Macro of 3 M macros.
-
-#     def __init__(self, code, isFile=False):
-
-#         super(AssemblyParser).__init__(self, code, isFile)
-#         # Macro of an A and C command.
-#         self.M_MACRO = 'M_MACRO'
-#         # Macro of an A and D;<jump mnem> C command.
-#         self.J_MACRO = 'J_MACRO'
-
-#         self.M2_MACRO = 'M2_MACRO'
-#         self.M3_MACRO = 'M3_MACRO' # Macro of 3 M macros.
-
-#     def countM(self, command=self.command, count=0):
-#         """Count the number of M macros that appear in current command."""
-#         if 'M[' in command:
-#             # If 'M[' is in the command string, increment by 1.
-#             count += 1
-#             # After that, search the next string portion again.
-#             count += self.countM(
-#                 command=command[command.find('M[')], count=count
-#             )
-        
-#         return count
-
-#     def commandType(self):
-#         super(VMParser, self).commandType()
-#         mCount = self.countM()
-        
-#         if self.command[:3] in ('JMP', 'JEQ', 'JLT', 'JGT', 'JLE', 'JGE'):
-#             return self.J_MACRO
-
-#         elif mCount == 1:
-#             return self.M_MACRO
-
-#         elif mCount == 2:
-#              return self.M2_MACRO
-#         else:  # Only other possibility is 3.
-#             return self.M3_MACRO
