@@ -59,12 +59,12 @@ class BaseParser(object):
             yield line
 
     def __contains__(self, key):
-
+        """return boolean if key is in any line in code"""
         lines = '\n'.join(self.lines)
         return key in lines
 
     def __len__(self):
-        
+        """return length of list of lines at self.lines"""
         return len(self.lines)
 
     def search(self, keyw):
@@ -256,8 +256,7 @@ class VMParser(BaseParser):
 class JackTokenizer(BaseParser):
 
     # Scanner object 
-    tokenRe = re.compile(r"""
-        
+    tokenRe = re.compile(r"""    
         (class|function|constructor
         |method|field|static|var|
         int|char|boolean|void|true|
@@ -274,10 +273,10 @@ class JackTokenizer(BaseParser):
     INT_CONST = 'INT_CONST'
     STRING_CONST = 'STRING_CONST'
     IDENTIFIER = 'IDENTIFIER'
-
+    # Indeces:     1.|     2.|        3.|           4.|         5.
     TYPES = (KEYWORD, SYMBOL, INT_CONST, STRING_CONST, IDENTIFIER)
 
-    def __init__(filepath):
+    def __init__(self, filepath):
         """All references to lines and commands are legacy
         instead, they refer to tokens.
         """
@@ -285,26 +284,23 @@ class JackTokenizer(BaseParser):
         self.lines = self.tokenize() # Replace lines with tokens.
 
     def __iter__(self):
+
         self.reset()
         for i in range(len(self)):
             yield (
-
-                self.tokenType()
-
+                self.tokenType(),
+                self.getToken()
             )
-            
             self.advance()
 
         self.reset()
-
-
 
     def tokenize(self):
         """Uses tokenRe regex to scan for tokens
         append tuple (token_id, token) to local var tokens
         return tokens
         """
-        scan = tokenRe.scanner(''.join(self.lines))
+        scan = self.tokenRe.scanner(''.join(self.lines))
         tokens = []
         
         while True:
@@ -326,21 +322,23 @@ class JackTokenizer(BaseParser):
 
         return self.TYPES[self.lines[self.curr_line][0]]
 
-    def keyWord(self):
-        pass
+    def getToken(self):
+        ttype = self.tokenType()
+        if ttype in (self.KEYWORD, self.SYMBOL, self.IDENTIFIER):
+           # return str val.
+            return self.lines[1]
 
-    def symbol(self):
-        pass
+        elif ttype == INT_CONST:
+            # return int val.
+            return int(self.lines[1])
 
-    def identifer(self):
-        pass
+        elif ttype == STRING_CONST:
+            # return str val.
+            token = self.lines[1]
+            return token[1:token.find('\"')]
 
-    def intVal(self):
-        pass
-
-    def stringVal(self):
-        pass
-
+        else:  # Indicates a bug. 
+            return None
 
 # class MacroParser(AssemblyParser):
 #    # ---J macro ---
