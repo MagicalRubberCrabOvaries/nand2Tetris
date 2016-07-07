@@ -6,7 +6,6 @@
 import os
 import re
 
-
 class BaseParser(object):
     """Parent class for all parsers"""
 
@@ -93,6 +92,8 @@ class BaseParser(object):
         if self.hasMoreCommands():
             self.curr_line += 1
             self.command = self.lines[self.curr_line]
+        else:
+            return None
 
     def reset(self):
         """Sets pointer back to top of command array"""
@@ -116,6 +117,7 @@ class AssemblyParser(BaseParser):
     # Creates markers for jump points in symbol table.
     # This pseudo-command only affects the assembler and not the hardware.
 
+    # Constants
     A_COMMAND = 'A_COMMAND'
     C_COMMAND = 'C_COMMAND'
     L_COMMAND = 'L_COMMAND'
@@ -199,9 +201,7 @@ class VMParser(BaseParser):
                 self.arg1(),
                 self.arg2()
             )
-            
             self.advance()
-
         self.reset()
 
     def commandType(self):
@@ -255,63 +255,67 @@ class VMParser(BaseParser):
 
 class JackTokenizer(BaseParser):
 
-    # Scanner object 
+    # Scanner osbject 
     tokenRe = re.compile(r"""
-        (class|function|constructor|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)
-        |([{}\[\]().,;|~&+-/*=<>])  # 2. symbol
-        |(\d+)                      # 3. int constant
-        |(\".*\")                   # 4. str constant
-        |(\w+[_0-9A-Za-z]*)         # 5. identifier
-        """, re.VERBOSE)
+        (//.*\n)                    # 0. comment to end of line.
+        |(/[*]{1,2}[*]/)          # 1. comment until end comment.
+                                    # 2. keyword
+        |(class|function|constructor|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)
+        |([{}\[\]().,;|~&+-/*=<>])  # 3. symbol
+        |(\d+)                      # 4. int constant
+        |(\".*\")                   # 5. str constant
+        |(\w+[_0-9A-Za-z]*)         # 6. identifier
+        """, re.VERBOSE | re.DOTALL)
 
+    # Constants
     KEYWORD = 'KEYWORD'
     SYMBOL = 'SYMBOL'
     INT_CONST = 'INT_CONST'
     STRING_CONST = 'STRING_CONST'
     IDENTIFIER = 'IDENTIFIER'
-    # Indeces:     1.|     2.|        3.|           4.|         5.
-    TYPES = (KEYWORD, SYMBOL, INT_CONST, STRING_CONST, IDENTIFIER)
+    # Indeces:                 2.|     3.|        4.|           5.|         6.
+    TYPES = (None, None, KEYWORD, SYMBOL, INT_CONST, STRING_CONST, IDENTIFIER)
 
     def __init__(self, filepath):
-        """All references to lines and commands are legacy
-        instead, they refer to tokens.
+        """This class has a different init from other parsers because
+        of the needs of tokenizing with a regex. Still, the tokens list
+        is stored in the 'lines' attribute (self.lines) for inherited 
+        methods.
         """
-        super(JackTokenizer, self).__init__(filepath)
-        self.lines = self.tokenize() # Replace lines with tokens.
 
-    def __iter__(self):
-
-        self.reset()
-        for i in range(len(self)):
-            yield (
-                self.tokenType(),
-                self.getToken()
-            )
-            self.advance()
-
-        self.reset()
-
-    def tokenize(self):
-        """Uses tokenRe regex to find all tokens.
-        Number of nonempty group is token id.
+        self.filepath = os.path.abspath(filepath)
+        self.name = os.path.basename(filepath[:filepath.find('.')])
         
-        return a list of tuples.
-        First tuple entry is token id.
-        Second is token.
-        """
+        srcFile = open(filepath, 'r')
+        code = srcFile.read()
+        srcFile.close()
 
-        scan = self.tokenRe.findall(''.join(self.lines))
-        tokens = []
-
-        for token in scan:
-            for i in range(1,6):
+        tokens = self.tokenRe.findall(code)
+        tokenlist = []
+        for token in tokens:
+            for i in range(2, 7):
                 if token[i] == '':
                     continue
                 else:
-                    tokens.append((i, token[i]))
+                    tokenlist.append((i, token[i]))
+                    break
 
-        return tokens
+        self.lines = tokenlist
+        self.curr_line = 0
+        self.end_line = len(self.lines) - 1
+        self.command = self.lines[self.curr_line]
 
+    def __iter__(self):
+        self.reset()
+        for i in range(len(self)):
+            ttype = self.tokenType()
+            yield(
+                ttype,
+                self.getToken(ttype)
+            )
+            self.advance()
+        self.reset()
+            
     def tokenType(self):
         """Access current token tuple.
         First entry is token_id.
@@ -319,24 +323,23 @@ class JackTokenizer(BaseParser):
 
         id is the same as the index in TYPES
         """
+        return self.TYPES[self.command[0]]
 
-        return self.TYPES[self.lines[self.curr_line][0]]
+    def getToken(self, ttype=None):
 
-    def getToken(self):
-        ttype = self.tokenType()
-        token = self.lines[self.curr_line][1]
-        if ttype in (self.KEYWORD, self.SYMBOL, self.IDENTIFIER):
-           # return str val.
-            return token
-
-        elif ttype == INT_CONST:
-            # return int val.
-            return int(token)
-
-        elif ttype == STRING_CONST:
-            # return str val.
-            token = self.curr_line[1]
-            return token[1:token.find('\"')]
-
-        else:  # Indicates a bug. 
+        if ttype == None:
+            # If no input, get type.
+            ttype = self.tokenType()
+        
+        if ttype in (self.KEYWORD, self.IDENTIFIER, self.SYMBOL):
+            # return token
+            return self.command[1]
+        elif ttype == self.INT_CONST:
+            # return token as int.
+            return int(self.command[1])
+        elif ttype == self.STRING_CONST:
+            # return token excluding double quotes (")
+            return self.command[1][1:-1]
+        else:
+            # Invalid type.
             return None
