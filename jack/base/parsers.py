@@ -255,26 +255,31 @@ class VMParser(BaseParser):
 
 class JackTokenizer(BaseParser):
 
-    # Scanner osbject 
-    tokenRe = re.compile(r"""
-        (//.*\n)                    # 0. comment to end of line.
-        |(/[*]{1,2}[*]/)          # 1. comment until end comment.
-                                    # 2. keyword
-        |(class|function|constructor|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return)
-        |([{}\[\]().,;|~&+-/*=<>])  # 3. symbol
-        |(\d+)                      # 4. int constant
-        |(\".*\")                   # 5. str constant
-        |(\w+[_0-9A-Za-z]*)         # 6. identifier
-        """, re.VERBOSE | re.DOTALL)
+    # Stuff to ignore.
+    WHITESPACE = 'WHITESPACE'
+    COMMENT = 'COMMENT'
+    MULTILINE = 'MULTILINE'
 
-    # Constants
+    # Tokens
     KEYWORD = 'KEYWORD'
     SYMBOL = 'SYMBOL'
     INT_CONST = 'INT_CONST'
     STRING_CONST = 'STRING_CONST'
     IDENTIFIER = 'IDENTIFIER'
-    # Indeces:                 2.|     3.|        4.|           5.|         6.
-    TYPES = (None, None, KEYWORD, SYMBOL, INT_CONST, STRING_CONST, IDENTIFIER)
+    # Indeces:     1.|     2.|        3.|           4.|         5.
+
+    # Scanner object
+    tokenRe = re.Scanner([
+        (COMMENT, r'(//[^\n]*)'),
+        (MULTILINE, r'/\*(.|[\r\n])+?\*/'),
+        (WHITESPACE, r'\s+'),
+        (KEYWORD, r'class|function|constructors|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return'),
+        (SYMBOL, r'[{}\[\]().,;|~&+-/*=<>]'),
+        (INT_CONST, r'\d+'),
+        (STRING_CONST, r'\".*?a"'),
+        (IDENTIFIER, r'\w+[_0-9A-Za-z]*')
+    ])
+
 
     def __init__(self, filepath):
         """This class has a different init from other parsers because
@@ -282,10 +287,8 @@ class JackTokenizer(BaseParser):
         is stored in the 'lines' attribute (self.lines) for inherited 
         methods.
         """
-
         self.filepath = os.path.abspath(filepath)
         self.name = os.path.basename(filepath[:filepath.find('.')])
-        
         srcFile = open(filepath, 'r')
         code = srcFile.read()
         srcFile.close()
