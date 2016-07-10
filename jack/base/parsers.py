@@ -269,17 +269,16 @@ class JackTokenizer(BaseParser):
     # Indeces:     1.|     2.|        3.|           4.|         5.
 
     # Scanner object
-    tokenRe = re.Scanner([
+    tokenScanner = re.Scanner([
         (COMMENT, r'(//[^\n]*)'),
-        (MULTILINE, r'/\*(.|[\r\n])+?\*/'),
+        (MULTILINE, r'/\*(.|\r\n)*?\*/'),
         (WHITESPACE, r'\s+'),
         (KEYWORD, r'class|function|constructors|method|field|static|var|int|char|boolean|void|true|false|null|this|let|do|if|else|while|return'),
         (SYMBOL, r'[{}\[\]().,;|~&+-/*=<>]'),
         (INT_CONST, r'\d+'),
-        (STRING_CONST, r'\".*?a"'),
+        (STRING_CONST, r'\".*?a\"'),
         (IDENTIFIER, r'\w+[_0-9A-Za-z]*')
     ])
-
 
     def __init__(self, filepath):
         """This class has a different init from other parsers because
@@ -290,59 +289,10 @@ class JackTokenizer(BaseParser):
         self.filepath = os.path.abspath(filepath)
         self.name = os.path.basename(filepath[:filepath.find('.')])
         srcFile = open(filepath, 'r')
-        code = srcFile.read()
+        self.code = srcFile.read()
         srcFile.close()
 
-        tokens = self.tokenRe.findall(code)
-        tokenlist = []
-        for token in tokens:
-            for i in range(2, 7):
-                if token[i] == '':
-                    continue
-                else:
-                    tokenlist.append((i, token[i]))
-                    break
-
-        self.lines = tokenlist
-        self.curr_line = 0
-        self.end_line = len(self.lines) - 1
-        self.command = self.lines[self.curr_line]
-
     def __iter__(self):
-        self.reset()
-        for i in range(len(self)):
-            ttype = self.tokenType()
-            yield(
-                ttype,
-                self.getToken(ttype)
-            )
-            self.advance()
-        self.reset()
-            
-    def tokenType(self):
-        """Access current token tuple.
-        First entry is token_id.
-        return lexical constant matching id.
-
-        id is the same as the index in TYPES
-        """
-        return self.TYPES[self.command[0]]
-
-    def getToken(self, ttype=None):
-
-        if ttype == None:
-            # If no input, get type.
-            ttype = self.tokenType()
         
-        if ttype in (self.KEYWORD, self.IDENTIFIER, self.SYMBOL):
-            # return token
-            return self.command[1]
-        elif ttype == self.INT_CONST:
-            # return token as int.
-            return int(self.command[1])
-        elif ttype == self.STRING_CONST:
-            # return token excluding double quotes (")
-            return self.command[1][1:-1]
-        else:
-            # Invalid type.
-            return None
+        for ttype, token in self.tokenScanner.scan(self.code):
+            yield (ttype, token.group())
