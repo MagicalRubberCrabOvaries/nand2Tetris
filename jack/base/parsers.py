@@ -23,8 +23,8 @@ class BaseParser(object):
             if commented:
                 if '*/' in line:
                     commented = False
-                else:
-                    continue
+                
+                continue
 
             elif line.startswith('/*') and not commented:
                 commented = True
